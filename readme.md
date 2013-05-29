@@ -39,6 +39,8 @@ Then run the Composer installation command:
 
 A quick example:
 
+	use Packfire\Template\Mustache\Mustache;
+
     $m = new Mustache('Hello {{planet}}!');
     echo $m->parameters(array('planet' => 'World'))->render();
     // "Hello World!"
@@ -52,6 +54,8 @@ And a more in-depth example--this is the canonical Mustache template:
     {{/in_ca}}
 
 Along with the associated `Mustache` class:
+
+	use Packfire\Template\Mustache\Mustache;
 
     class Chris extends Mustache {
         public $name = "Chris";
@@ -87,6 +91,8 @@ Create a view object--which could also be an associative array, but those don't 
 
 
 And render it:
+
+	use Packfire\Template\Mustache\Mustache;
 
     $chris = new Chris();
     $m = new Mustache();
