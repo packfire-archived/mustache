@@ -121,6 +121,7 @@ class Mustache
             $position = $start;
             $templateScope = substr($this->template, $start, $end - $start);
             while ($position < $end) {
+                $scope = $this->scope($scopePath);
                 $match = array();
                 $hasMatch = preg_match(
                     $this->buildMatchingTag(),
