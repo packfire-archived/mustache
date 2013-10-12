@@ -105,6 +105,20 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Singapore ', $output);
     }
 
+    public function testCallableProperty()
+    {
+        $mustache = new Mustache();
+        // purposely missed out the closing tag for more testing
+        $mustache->template('{{person}}!');
+        $params = array(
+            'person' => function () {
+                return 'Cool';
+            }
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('Cool!', $output);
+    }
+
     public function testInverts()
     {
         $mustache = new Mustache();
