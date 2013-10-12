@@ -92,4 +92,13 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->object->template('Good day {{&name}}!');
         $this->assertEquals('Good day <b>name</b>!', $this->object->parameters(array('name' => '<b>name</b>'))->render());
     }
+
+    public function testPartial()
+    {
+        $mustache = new Mustache();
+        $mustache->template('There you go! {{>Loader/test}}');
+        $loader = new Loader\FileSystemLoader(__DIR__);
+        $output = $mustache->loader($loader)->parameters(array('name' => 'world'))->render();
+        $this->assertEquals('There you go! My name is world.', $output);
+    }
 }
