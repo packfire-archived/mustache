@@ -56,4 +56,11 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals('Hello world!', $this->object->render());
     }
+
+    public function testObjectRender()
+    {
+        $obj = new TestObject();
+        $obj->template('Hello {{name}}{{#intro}}, my name is {{intro}}{{/intro}}!');
+        $this->assertEquals('Hello Regina, my name is James Bond!', $obj->render());
+    }
 }
