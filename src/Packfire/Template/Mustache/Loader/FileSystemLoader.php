@@ -11,7 +11,7 @@
 
 namespace Packfire\Template\Mustache\Loader;
 
-class FileLoader extends ArrayLoader
+class FileSystemLoader extends ArrayLoader
 {
     protected $root;
 
