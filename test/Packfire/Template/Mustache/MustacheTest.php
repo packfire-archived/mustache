@@ -73,11 +73,131 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Hello Regina, my name is James Bond!', $obj->render());
     }
 
+    public function testDotNotation()
+    {
+        $mustache = new Mustache();
+        // purposely missed out the closing tag for more testing
+        $mustache->template('Singapore {{#person.address.postalcode}}{{person.address.postalcode}}');
+        $params = array(
+            'person' => array(
+                'address' => array(
+                    'postalcode' => '649139'
+                )
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('Singapore 649139', $output);
+    }
+
+    public function testNotSet()
+    {
+        $mustache = new Mustache();
+        // purposely missed out the closing tag for more testing
+        $mustache->template('Singapore {{#person.address.block}}{{person.address.postalcode}}');
+        $params = array(
+            'person' => array(
+                'address' => array(
+                    'postalcode' => '649139'
+                )
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('Singapore ', $output);
+    }
+
+    public function testCallableProperty()
+    {
+        $mustache = new Mustache();
+        // purposely missed out the closing tag for more testing
+        $mustache->template('{{person}}!');
+        $params = array(
+            'person' => function () {
+                return 'Cool';
+            }
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('Cool!', $output);
+    }
+
+    public function testInverts()
+    {
+        $mustache = new Mustache();
+        $mustache->template('{{^coin}}COIN{{/coin}}!');
+        $output = $mustache->parameters(array('coin' => false))->render();
+        $this->assertEquals('COIN!', $output);
+    }
+
+    public function testArrayList()
+    {
+        $mustache = new Mustache();
+        $mustache->template('{{#list}}|{{name}}{{/list}}!');
+        $params = array(
+            'list' => array(
+                array('name' => 'sam'),
+                array('name' => 'john'),
+                array('name' => 'henry')
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('|sam|john|henry!', $output);
+    }
+
+    public function testArrayList2()
+    {
+        $mustache = new Mustache();
+        $mustache->template('{{list}}!');
+        $params = array(
+            'list' => array(
+                'sam',
+                'john',
+                'henry'
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('samjohnhenry!', $output);
+    }
+
+
     public function testDelimiterChange()
     {
         $mustache = new Mustache();
         $mustache->template('{{=<$ $>=}}Hello <$name$>!<$={{ }}=$> My name is {{name}}!');
         $output = $mustache->parameters(array('name' => 'world'))->render();
         $this->assertEquals('Hello world! My name is world!', $output);
+    }
+
+    public function testComment()
+    {
+        $mustache = new Mustache();
+        $mustache->template('Jump over the {{name}} {{! pretty sure you can\'t make it there!}}!');
+        $output = $mustache->parameters(array('name' => 'moon'))->render();
+        $this->assertEquals('Jump over the moon !', $output);
+    }
+
+    public function testEscapeTest()
+    {
+        $this->object->template('Good day {{name}}!');
+        $this->assertEquals('Good day &lt;b&gt;name&lt;/b&gt;!', $this->object->parameters(array('name' => '<b>name</b>'))->render());
+    }
+
+    public function testNoEscapeTest()
+    {
+        $this->object->template('Good day {{&name}}!');
+        $this->assertEquals('Good day <b>name</b>!', $this->object->parameters(array('name' => '<b>name</b>'))->render());
+    }
+
+    public function testNoEscapeTest2()
+    {
+        $this->object->template('Good day {{{name}}}!');
+        $this->assertEquals('Good day <b>name</b>!', $this->object->parameters(array('name' => '<b>name</b>'))->render());
+    }
+
+    public function testPartial()
+    {
+        $mustache = new Mustache();
+        $mustache->template('There you go! {{>Loader/test}}');
+        $loader = new Loader\FileSystemLoader(__DIR__);
+        $output = $mustache->loader($loader)->parameters(array('name' => 'world'))->render();
+        $this->assertEquals('There you go! My name is world.', $output);
     }
 }
