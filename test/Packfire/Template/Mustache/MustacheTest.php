@@ -50,6 +50,15 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @covers \Packfire\Template\Mustache\Mustache::parameters
+     */
+    public function testEmptyParameters()
+    {
+        $this->object->parameters(array());
+        $this->assertEquals('Hello !', $this->object->render());
+    }
+
+    /**
      * @covers \Packfire\Template\Mustache\Mustache::render
      */
     public function testRender()
