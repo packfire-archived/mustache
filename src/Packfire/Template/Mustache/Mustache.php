@@ -27,7 +27,7 @@ class Mustache
      * The tag regular expression
      * @since 1.0-sofia
      */
-    const TAG_REGEX = '`((!OPEN!)([\^&#\=/{\!\>\<]{0,1})(%s)(!CLOSE!))`is';
+    const TAG_REGEX = '`((%s)([\^&#\=/{\!\>\<]{0,1})(%s)(%s))`is';
 
     const TYPE_NORMAL = '';
     const TYPE_OPEN = '#';
@@ -48,11 +48,18 @@ class Mustache
     protected $buffer;
 
     /**
-     * The output buffer string
+     * The opening delimiter
      * @var string
      * @since 1.0.1
      */
-    protected $tagRegex;
+    protected $openDelimiter = '{{';
+
+    /**
+     * The closing delimiter
+     * @var string
+     * @since 1.0.1
+     */
+    protected $closeDelimiter = '}}';
 
     /**
      * The template to be parsed
@@ -188,8 +195,7 @@ class Mustache
                             if (substr($name, -1) == '=') {
                                 $name = substr($name, 0, strlen($name) - 1);
                             }
-                            list($open, $close) = explode(' ', $name);
-                            $this->tagRegex = str_replace(array('!OPEN!', '!CLOSE!'), array($open, $close), self::TAG_REGEX);
+                            list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
                             $position = $tagEnd;
                             break;
                         default:
@@ -409,7 +415,6 @@ class Mustache
      */
     public function render()
     {
-        $this->tagRegex = str_replace(array('!OPEN!', '!CLOSE!'), array('{{', '}}'), self::TAG_REGEX);
         $this->loadParameters();
         $this->buffer = '';
         $this->parse(array(), 0, strlen($this->template));
@@ -424,6 +429,6 @@ class Mustache
      */
     private function buildMatchingTag($name = '([^}].+?)([}]{0,1})')
     {
-        return sprintf($this->tagRegex, $name);
+        return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), $name, preg_quote($this->closeDelimiter));
     }
 }
