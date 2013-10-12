@@ -73,6 +73,14 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Hello Regina, my name is James Bond!', $obj->render());
     }
 
+    public function testInverts()
+    {
+        $mustache = new Mustache();
+        $mustache->template('{{^coin}}COIN{{/coin}}!');
+        $output = $mustache->parameters(array('coin' => false))->render();
+        $this->assertEquals('COIN!', $output);
+    }
+
     public function testDelimiterChange()
     {
         $mustache = new Mustache();
