@@ -72,4 +72,12 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $obj->template('Hello {{name}}{{#intro}}, my name is {{intro}}{{/intro}}!');
         $this->assertEquals('Hello Regina, my name is James Bond!', $obj->render());
     }
+
+    public function testDelimiterChange()
+    {
+        $mustache = new Mustache();
+        $mustache->template('{{=<$ $>=}}Hello <$name$>!');
+        $output = $mustache->parameters(array('name' => 'world'))->render();
+        $this->assertEquals('Hello world!', $output);
+    }
 }
