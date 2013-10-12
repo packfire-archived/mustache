@@ -97,22 +97,19 @@ class Mustache
     public function __construct($template = null)
     {
         $this->template = $template;
+        $this->escaper = array($this, 'escape');
     }
 
     /**
-     * Escape the text using the defined $escaper or the default
+     * Default escaper for escaping the text using the default
      * htmlspecialchars() function.
      * @param string $text The text to be escaped
      * @return string The escaped text.
-     * @since 1.0-sofia
+     * @since 1.1.0
      */
     protected function escape($text)
     {
-        if (is_callable($this->escaper)) {
-            return call_user_func($this->escaper, $text);
-        } else {
-            return htmlspecialchars($text, ENT_COMPAT, 'UTF-8');
-        }
+        return htmlspecialchars($text, ENT_COMPAT, 'UTF-8');
     }
 
     /**
@@ -268,7 +265,7 @@ class Mustache
             $result = implode('', $result);
         }
         if ($escape) {
-            $result = $this->escape($result);
+            $result = call_user_func($this->escaper, $result);
         }
         $this->buffer .= $result;
     }
