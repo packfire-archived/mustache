@@ -104,6 +104,14 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Hello world! My name is world!', $output);
     }
 
+    public function testComment()
+    {
+        $mustache = new Mustache();
+        $mustache->template('Jump over the {{name}} {{! pretty sure you can\'t make it there!}}!');
+        $output = $mustache->parameters(array('name' => 'moon'))->render();
+        $this->assertEquals('Jump over the moon !', $output);
+    }
+
     public function testEscapeTest()
     {
         $this->object->template('Good day {{name}}!');
