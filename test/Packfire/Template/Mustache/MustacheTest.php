@@ -73,6 +73,22 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Hello Regina, my name is James Bond!', $obj->render());
     }
 
+    public function testDotNotation()
+    {
+        $mustache = new Mustache();
+        // purposely missed out the closing tag for more testing
+        $mustache->template('Singapore {{#person.address.postalcode}}{{person.address.postalcode}}');
+        $params = array(
+            'person' => array(
+                'address' => array(
+                    'postalcode' => '649139'
+                )
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('Singapore 649139', $output);
+    }
+
     public function testInverts()
     {
         $mustache = new Mustache();
