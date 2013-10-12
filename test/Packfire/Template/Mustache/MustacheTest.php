@@ -89,6 +89,22 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Singapore 649139', $output);
     }
 
+    public function testNotSet()
+    {
+        $mustache = new Mustache();
+        // purposely missed out the closing tag for more testing
+        $mustache->template('Singapore {{#person.address.block}}{{person.address.postalcode}}');
+        $params = array(
+            'person' => array(
+                'address' => array(
+                    'postalcode' => '649139'
+                )
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('Singapore ', $output);
+    }
+
     public function testInverts()
     {
         $mustache = new Mustache();
