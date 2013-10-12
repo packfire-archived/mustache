@@ -176,18 +176,18 @@ class Mustache
                             $buffer .= $this->partial($name, $scope);
                             $position = $start + $tagEnd;
                             break;
-                        case self::TYPE_UNESCAPETRIPLE:
-                        case self::TYPE_UNESCAPE:
-                            $this->addToBuffer($buffer, $scope, $name, false);
-                            $position = $start + $tagEnd;
-                            break;
-                            break;
                         case self::TYPE_CHANGETAG:
                             if (substr($name, -1) == '=') {
                                 $name = substr($name, 0, strlen($name) - 1);
                             }
                             list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
                             $position = $tagEnd;
+                            break;
+                        case self::TYPE_UNESCAPETRIPLE:
+                        case self::TYPE_UNESCAPE:
+                            $this->addToBuffer($buffer, $scope, $name, false);
+                            $position = $start + $tagEnd;
+                            break;
                             break;
                         default:
                             $this->addToBuffer($buffer, $scope, $name);
