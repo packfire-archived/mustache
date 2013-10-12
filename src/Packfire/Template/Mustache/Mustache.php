@@ -41,13 +41,6 @@ class Mustache
     const TYPE_CHANGETAG = '=';
 
     /**
-     * The output buffer string
-     * @var string
-     * @since 1.0-sofia
-     */
-    protected $buffer;
-
-    /**
      * The opening delimiter
      * @var string
      * @since 1.0.1
@@ -76,18 +69,18 @@ class Mustache
     protected $parameters;
 
     /**
-     * The partials to be included
-     * @var array|Map
-     * @since 1.0-sofia
+     * The partials loader
+     * @var Packfire\Template\Mustache\LoaderInterface
+     * @since 1.1.0
      */
-    protected $partials;
+    protected $loader;
 
     /**
      * The escaper callback
      * @var Closure|callback
      * @since 1.0-sofia
      */
-    protected $escaper;
+    protected $escaper = array(__CLASS__, 'escape');
 
     /**
      * Create a new Mustache object
@@ -100,19 +93,15 @@ class Mustache
     }
 
     /**
-     * Escape the text using the defined $escaper or the default
+     * Default escaper for escaping the text using the default
      * htmlspecialchars() function.
      * @param string $text The text to be escaped
      * @return string The escaped text.
-     * @since 1.0-sofia
+     * @since 1.1.0
      */
-    protected function escape($text)
+    protected static function escape($text)
     {
-        if (is_callable($this->escaper)) {
-            return call_user_func($this->escaper, $text);
-        } else {
-            return htmlspecialchars($text, ENT_COMPAT, 'UTF-8');
-        }
+        return htmlspecialchars($text, ENT_COMPAT, 'UTF-8');
     }
 
     /**
@@ -122,15 +111,17 @@ class Mustache
      *              to start working from
      * @param integer $end The end position of the template string
      *              to stop working at
-     * @since 1.0-sofia
+     * @return string Returns the parsed text
+     * @since 1.1.0
      */
     private function parse($scopePath, $start, $end)
     {
+        $buffer = '';
         $scope = $this->scope($scopePath);
         if ($this->isArrayOfObjects($scope)) {
             $keys = array_keys($scope);
             foreach ($keys as $key) {
-                $this->parse(array_merge($scopePath, array($key)), $start, $end);
+                $buffer .= $this->parse(array_merge($scopePath, array($key)), $start, $end);
             }
         } else {
             $position = $start;
@@ -151,7 +142,7 @@ class Mustache
                     $tagEnd = $tagStart + $tagLength;
                     $name = trim($match[5][0]);
                     $tagType = $match[3][0];
-                    $this->buffer .= substr($this->template, $position, $tagStart + $start - $position);
+                    $buffer .= substr($this->template, $position, $tagStart + $start - $position);
                     switch($tagType){
                         case self::TYPE_COMMENT:
                             // comment, do nothing
@@ -167,7 +158,7 @@ class Mustache
                                 } else {
                                     $path = array_merge($scopePath, array($name));
                                 }
-                                $this->parse($path, $start + $tagEnd, $position);
+                                $buffer .= $this->parse($path, $start + $tagEnd, $position);
                             }
                             $position += $tagLength;
                             break;
@@ -176,20 +167,14 @@ class Mustache
                             $this->findClosingTag($name, $position, $end);
                             $property = $this->property($scope, $name);
                             if (!$property) {
-                                $this->parse($scopePath, $start + $tagEnd, $position);
+                                $buffer .= $this->parse($scopePath, $start + $tagEnd, $position);
                             }
                             $position += $tagLength;
                             break;
                         case self::TYPE_PARTIAL1:
                         case self::TYPE_PARTIAL2:
-                            $this->partial($name, $scope);
+                            $buffer .= $this->partial($name, $scope);
                             $position = $start + $tagEnd;
-                            break;
-                        case self::TYPE_UNESCAPETRIPLE:
-                        case self::TYPE_UNESCAPE:
-                            $this->addToBuffer($scope, $name, false);
-                            $position = $start + $tagEnd;
-                            break;
                             break;
                         case self::TYPE_CHANGETAG:
                             if (substr($name, -1) == '=') {
@@ -198,18 +183,25 @@ class Mustache
                             list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
                             $position = $tagEnd;
                             break;
+                        case self::TYPE_UNESCAPETRIPLE:
+                        case self::TYPE_UNESCAPE:
+                            $this->addToBuffer($buffer, $scope, $name, false);
+                            $position = $start + $tagEnd;
+                            break;
+                            break;
                         default:
-                            $this->addToBuffer($scope, $name);
+                            $this->addToBuffer($buffer, $scope, $name);
                             $position = $start + $tagEnd;
                             break;
                     }
                 } else {
                     // no more found
-                    $this->buffer .= substr($this->template, $position, $end - $position);
+                    $buffer .= substr($this->template, $position, $end - $position);
                     $position = $end;
                 }
             }
         }
+        return $buffer;
     }
 
     protected function scope($path)
@@ -238,16 +230,21 @@ class Mustache
     private function property($scope, $name)
     {
         $result = null;
-        if (is_object($scope)) {
-            if (property_exists($scope, $name)) {
-                $result = $scope->$name;
-            } elseif (is_callable($scope, $name)) {
-                $result = $scope->$name();
+        $names = explode('.', $name);
+        foreach ($names as $name) {
+            if (is_object($scope)) {
+                if (property_exists($scope, $name)) {
+                    $result = $scope->$name;
+                }
+            } elseif (is_array($scope)) {
+                if (array_key_exists($name, $scope)) {
+                    $result = $scope[$name];
+                }
             }
-        } elseif (is_array($scope)) {
-            if (array_key_exists($name, $scope)) {
-                $result = $scope[$name];
+            if (is_callable($result)) {
+                $result = call_user_func($result);
             }
+            $scope = $result;
         }
         return $result;
     }
@@ -261,47 +258,63 @@ class Mustache
      *                 Defaults to true.
      * @since 1.0-sofia
      */
-    private function addToBuffer($scope, $name, $escape = true)
+    private function addToBuffer(&$buffer, $scope, $name, $escape = true)
     {
         $result = $this->property($scope, $name);
         if (is_array($result)) {
             $result = implode('', $result);
         }
         if ($escape) {
-            $result = $this->escape($result);
+            $result = call_user_func($this->escaper, $result);
         }
-        $this->buffer .= $result;
+        $buffer .= $result;
     }
 
     /**
-     * Set the partials to be included into the template
-     * @param mixed $parameters The partials
+     * Set the partial loader for the Mustache engine
+     * @param Packfire\Template\Mustache\LoaderInterface $loader The loader for partials
      * @return Mustache Returns self for chaining
-     * @since 1.1-sofia
+     * @since 1.1.0
      */
-    public function partials($partials)
+    public function loader(LoaderInterface $loader)
     {
-        $this->partials = $partials;
+        $this->loader = $loader;
         return $this;
     }
 
     /**
+     * Set the escaping callback
+     * @param callback $escaper The callback function / method for providing escaping
+     * @return Mustache Returns self for chaining
+     * @since 1.1.0
+     */
+    public function escaper($escaper)
+    {
+        $this->escaper = $escaper;
+        return $this;
+    }
+
+
+    /**
      * Get the partial by name and add to the buffer
      * @param string $name Name of the partial
+     * @return string Returns the rendered buffer
      * @since 1.0-sofia
      */
     protected function partial($name, $scope)
     {
-        if ($this->partials) {
-            $template = $this->partials[$name];
+        $buffer = '';
+        if ($this->loader) {
+            $template = $this->loader->load($name);
             if ($template) {
                 $partial = new Mustache($template);
                 $partial->parameters($this->parameters)
-                        ->partials($this->partials)
+                        ->loader($this->loader)
                         ->escaper($this->escaper);
-                $this->buffer .= $partial->render($scope);
+                $buffer .= $partial->render($scope);
             }
         }
+        return $buffer;
     }
 
     /**
@@ -313,7 +326,7 @@ class Mustache
      */
     private function isArrayOfObjects($scope)
     {
-        return is_array($scope) && (count($scope) == 0 || array_keys($scope) === range(0, count($scope) - 1));
+        return is_array($scope) && (count($scope) == 0 || array_keys($scope) === range(0, count($scope) - 1)) && !is_scalar($scope[0]);
     }
 
     /**
@@ -416,9 +429,8 @@ class Mustache
     public function render()
     {
         $this->loadParameters();
-        $this->buffer = '';
-        $this->parse(array(), 0, strlen($this->template));
-        return $this->buffer;
+        $buffer = $this->parse(array(), 0, strlen($this->template));
+        return $buffer;
     }
 
     /**
