@@ -76,8 +76,8 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
     public function testDelimiterChange()
     {
         $mustache = new Mustache();
-        $mustache->template('{{=<$ $>=}}Hello <$name$>!');
+        $mustache->template('{{=<$ $>=}}Hello <$name$>!<$={{ }}=$> My name is {{name}}!');
         $output = $mustache->parameters(array('name' => 'world'))->render();
-        $this->assertEquals('Hello world!', $output);
+        $this->assertEquals('Hello world! My name is world!', $output);
     }
 }
