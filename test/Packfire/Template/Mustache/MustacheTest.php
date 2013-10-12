@@ -50,10 +50,34 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @covers \Packfire\Template\Mustache\Mustache::parameters
+     */
+    public function testEmptyParameters()
+    {
+        $this->object->parameters(array());
+        $this->assertEquals('Hello !', $this->object->render());
+    }
+
+    /**
      * @covers \Packfire\Template\Mustache\Mustache::render
      */
     public function testRender()
     {
         $this->assertEquals('Hello world!', $this->object->render());
+    }
+
+    public function testObjectRender()
+    {
+        $obj = new TestObject();
+        $obj->template('Hello {{name}}{{#intro}}, my name is {{intro}}{{/intro}}!');
+        $this->assertEquals('Hello Regina, my name is James Bond!', $obj->render());
+    }
+
+    public function testDelimiterChange()
+    {
+        $mustache = new Mustache();
+        $mustache->template('{{=<$ $>=}}Hello <$name$>!<$={{ }}=$> My name is {{name}}!');
+        $output = $mustache->parameters(array('name' => 'world'))->render();
+        $this->assertEquals('Hello world! My name is world!', $output);
     }
 }

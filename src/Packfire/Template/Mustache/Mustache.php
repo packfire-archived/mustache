@@ -24,10 +24,10 @@ class Mustache
 {
 
     /**
-     * The tag regular expression 
+     * The tag regular expression
      * @since 1.0-sofia
      */
-    const TAG_REGEX = '`(([{]{2})([\^&#/{\!\>\<]{0,1})(%s)([}]{2}))`is';
+    const TAG_REGEX = '`((%s)([\^&#\=/{\!\>\<]{0,1})(%s)(%s))`is';
 
     const TYPE_NORMAL = '';
     const TYPE_OPEN = '#';
@@ -38,6 +38,7 @@ class Mustache
     const TYPE_COMMENT = '!';
     const TYPE_PARTIAL1 = '>';
     const TYPE_PARTIAL2 = '<';
+    const TYPE_CHANGETAG = '=';
 
     /**
      * The output buffer string
@@ -45,6 +46,20 @@ class Mustache
      * @since 1.0-sofia
      */
     protected $buffer;
+
+    /**
+     * The opening delimiter
+     * @var string
+     * @since 1.0.1
+     */
+    protected $openDelimiter = '{{';
+
+    /**
+     * The closing delimiter
+     * @var string
+     * @since 1.0.1
+     */
+    protected $closeDelimiter = '}}';
 
     /**
      * The template to be parsed
@@ -174,6 +189,14 @@ class Mustache
                         case self::TYPE_UNESCAPE:
                             $this->addToBuffer($scope, $name, false);
                             $position = $start + $tagEnd;
+                            break;
+                            break;
+                        case self::TYPE_CHANGETAG:
+                            if (substr($name, -1) == '=') {
+                                $name = substr($name, 0, strlen($name) - 1);
+                            }
+                            list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
+                            $position = $tagEnd;
                             break;
                         default:
                             $this->addToBuffer($scope, $name);
@@ -406,6 +429,6 @@ class Mustache
      */
     private function buildMatchingTag($name = '([^}].+?)([}]{0,1})')
     {
-        return sprintf(self::TAG_REGEX, $name);
+        return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), $name, preg_quote($this->closeDelimiter));
     }
 }
