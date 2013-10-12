@@ -142,6 +142,22 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('|sam|john|henry!', $output);
     }
 
+    public function testArrayList2()
+    {
+        $mustache = new Mustache();
+        $mustache->template('{{list}}!');
+        $params = array(
+            'list' => array(
+                'sam',
+                'john',
+                'henry'
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('samjohnhenry!', $output);
+    }
+
+
     public function testDelimiterChange()
     {
         $mustache = new Mustache();
