@@ -87,7 +87,7 @@ class Mustache
      * @var Closure|callback
      * @since 1.0-sofia
      */
-    protected $escaper;
+    protected $escaper = array(__CLASS__, 'escape');
 
     /**
      * Create a new Mustache object
@@ -97,7 +97,6 @@ class Mustache
     public function __construct($template = null)
     {
         $this->template = $template;
-        $this->escaper = array($this, 'escape');
     }
 
     /**
@@ -107,7 +106,7 @@ class Mustache
      * @return string The escaped text.
      * @since 1.1.0
      */
-    protected function escape($text)
+    protected static function escape($text)
     {
         return htmlspecialchars($text, ENT_COMPAT, 'UTF-8');
     }
@@ -281,6 +280,19 @@ class Mustache
         $this->loader = $loader;
         return $this;
     }
+
+    /**
+     * Set the escaping callback
+     * @param callback $escaper The callback function / method for providing escaping
+     * @return Mustache Returns self for chaining
+     * @since 1.1.0
+     */
+    public function escaper($escaper)
+    {
+        $this->escaper = $escaper;
+        return $this;
+    }
+
 
     /**
      * Get the partial by name and add to the buffer
