@@ -80,4 +80,16 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $output = $mustache->parameters(array('name' => 'world'))->render();
         $this->assertEquals('Hello world! My name is world!', $output);
     }
+
+    public function testEscapeTest()
+    {
+        $this->object->template('Good day {{name}}!');
+        $this->assertEquals('Good day &lt;b&gt;name&lt;/b&gt;!', $this->object->parameters(array('name' => '<b>name</b>'))->render());
+    }
+
+    public function testNoEscapeTest()
+    {
+        $this->object->template('Good day {{&name}}!');
+        $this->assertEquals('Good day <b>name</b>!', $this->object->parameters(array('name' => '<b>name</b>'))->render());
+    }
 }
