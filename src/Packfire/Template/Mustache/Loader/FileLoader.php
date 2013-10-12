@@ -40,14 +40,16 @@ class FileLoader extends ArrayLoader
 
     public function load($name)
     {
-        $path = $root . '/' . $name;
-        if ($this->extension) {
-            $path .= '.' . $this->extension;
+        if (!isset($this->template[$name])) {
+            $path = $root . '/' . $name;
+            if ($this->extension) {
+                $path .= '.' . $this->extension;
+            }
+            if (!file_exists($path)) {
+                throw new TemplateNotFoundException($name);
+            }
+            $this->templates[$name] = file_get_contents($path);
         }
-        if (!file_exists($path)) {
-            throw new TemplateNotFoundException($name);
-        }
-        $this->templates[$name] = file_get_contents($path);
         return $this->templates[$name];
     }
 }
