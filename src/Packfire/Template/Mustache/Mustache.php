@@ -24,10 +24,10 @@ class Mustache
 {
 
     /**
-     * The tag regular expression 
+     * The tag regular expression
      * @since 1.0-sofia
      */
-    const TAG_REGEX = '`(([{]{2})([\^&#/{\!\>\<]{0,1})(%s)([}]{2}))`is';
+    const TAG_REGEX = '`((!OPEN!)([\^&#/{\!\>\<]{0,1})(%s)(!CLOSE!))`is';
 
     const TYPE_NORMAL = '';
     const TYPE_OPEN = '#';
@@ -45,6 +45,13 @@ class Mustache
      * @since 1.0-sofia
      */
     protected $buffer;
+
+    /**
+     * The output buffer string
+     * @var string
+     * @since 1.0.1
+     */
+    protected $tagRegex;
 
     /**
      * The template to be parsed
@@ -392,6 +399,7 @@ class Mustache
      */
     public function render()
     {
+        $this->tagRegex = str_replace(array('!OPEN!', '!CLOSE!'), array('{{', '}}'), self::TAG_REGEX);
         $this->loadParameters();
         $this->buffer = '';
         $this->parse(array(), 0, strlen($this->template));
@@ -406,6 +414,6 @@ class Mustache
      */
     private function buildMatchingTag($name = '([^}].+?)([}]{0,1})')
     {
-        return sprintf(self::TAG_REGEX, $name);
+        return sprintf($this->tagRegex, $name);
     }
 }
