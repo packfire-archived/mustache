@@ -275,7 +275,7 @@ class Mustache
 
     /**
      * Set the partials to be included into the template
-     * @param mixed $parameters The partials
+     * @param array $partials The partials
      * @return Mustache Returns self for chaining
      * @since 1.1-sofia
      */
