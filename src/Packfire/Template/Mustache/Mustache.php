@@ -230,16 +230,20 @@ class Mustache
     private function property($scope, $name)
     {
         $result = null;
-        if (is_object($scope)) {
-            if (property_exists($scope, $name)) {
-                $result = $scope->$name;
-            } elseif (is_callable($scope, $name)) {
-                $result = $scope->$name();
+        $names = explode('.', $name);
+        foreach ($names as $name) {
+            if (is_object($scope)) {
+                if (property_exists($scope, $name)) {
+                    $result = $scope->$name;
+                } elseif (is_callable($scope, $name)) {
+                    $result = $scope->$name();
+                }
+            } elseif (is_array($scope)) {
+                if (array_key_exists($name, $scope)) {
+                    $result = $scope[$name];
+                }
             }
-        } elseif (is_array($scope)) {
-            if (array_key_exists($name, $scope)) {
-                $result = $scope[$name];
-            }
+            $scope = $result;
         }
         return $result;
     }
