@@ -235,13 +235,14 @@ class Mustache
             if (is_object($scope)) {
                 if (property_exists($scope, $name)) {
                     $result = $scope->$name;
-                } elseif (is_callable($scope, $name)) {
-                    $result = $scope->$name();
                 }
             } elseif (is_array($scope)) {
                 if (array_key_exists($name, $scope)) {
                     $result = $scope[$name];
                 }
+            }
+            if (is_callable($result)) {
+                $result = call_user_func($result);
             }
             $scope = $result;
         }
