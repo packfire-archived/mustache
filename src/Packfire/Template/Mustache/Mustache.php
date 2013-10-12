@@ -76,11 +76,11 @@ class Mustache
     protected $parameters;
 
     /**
-     * The partials to be included
-     * @var array|Map
-     * @since 1.0-sofia
+     * The partials loader
+     * @var Packfire\Template\Mustache\LoaderInterface
+     * @since 1.1.0
      */
-    protected $partials;
+    protected $loader;
 
     /**
      * The escaper callback
@@ -274,14 +274,14 @@ class Mustache
     }
 
     /**
-     * Set the partials to be included into the template
-     * @param array $partials The partials
+     * Set the partial loader for the Mustache engine
+     * @param Packfire\Template\Mustache\LoaderInterface $loader The loader for partials
      * @return Mustache Returns self for chaining
-     * @since 1.1-sofia
+     * @since 1.1.0
      */
-    public function partials($partials)
+    public function loader(LoaderInterface $loader)
     {
-        $this->partials = $partials;
+        $this->loader = $loader;
         return $this;
     }
 
@@ -293,7 +293,7 @@ class Mustache
     protected function partial($name, $scope)
     {
         if ($this->partials) {
-            $template = $this->partials[$name];
+            $template = $this->loader->load($name);
             if ($template) {
                 $partial = new Mustache($template);
                 $partial->parameters($this->parameters)
