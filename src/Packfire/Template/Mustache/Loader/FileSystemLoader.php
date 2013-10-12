@@ -41,8 +41,8 @@ class FileSystemLoader extends ArrayLoader
     public function load($name)
     {
         if (!isset($this->template[$name])) {
-            $path = $root . '/' . $name;
-            if ($this->extension) {
+            $path = $this->root . '/' . $name;
+            if ($this->extension && substr($name, -1 - strlen($this->extension)) !== '.' . $this->extension) {
                 $path .= '.' . $this->extension;
             }
             if (!file_exists($path)) {
