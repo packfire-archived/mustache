@@ -289,12 +289,12 @@ class Mustache
      */
     protected function partial($name, $scope)
     {
-        if ($this->partials) {
+        if ($this->loader) {
             $template = $this->loader->load($name);
             if ($template) {
                 $partial = new Mustache($template);
                 $partial->parameters($this->parameters)
-                        ->partials($this->partials)
+                        ->loader($this->loader)
                         ->escaper($this->escaper);
                 $this->buffer .= $partial->render($scope);
             }
