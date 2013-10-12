@@ -27,7 +27,7 @@ class Mustache
      * The tag regular expression
      * @since 1.0-sofia
      */
-    const TAG_REGEX = '`((!OPEN!)([\^&#/{\!\>\<]{0,1})(%s)(!CLOSE!))`is';
+    const TAG_REGEX = '`((!OPEN!)([\^&#\=/{\!\>\<]{0,1})(%s)(!CLOSE!))`is';
 
     const TYPE_NORMAL = '';
     const TYPE_OPEN = '#';
@@ -38,6 +38,7 @@ class Mustache
     const TYPE_COMMENT = '!';
     const TYPE_PARTIAL1 = '>';
     const TYPE_PARTIAL2 = '<';
+    const TYPE_CHANGETAG = '=';
 
     /**
      * The output buffer string
@@ -181,6 +182,15 @@ class Mustache
                         case self::TYPE_UNESCAPE:
                             $this->addToBuffer($scope, $name, false);
                             $position = $start + $tagEnd;
+                            break;
+                            break;
+                        case self::TYPE_CHANGETAG:
+                            if (substr($name, -1) == '=') {
+                                $name = substr($name, 0, strlen($name) - 1);
+                            }
+                            list($open, $close) = explode(' ', $name);
+                            $this->tagRegex = str_replace(array('!OPEN!', '!CLOSE!'), array($open, $close), self::TAG_REGEX);
+                            $position = $tagEnd;
                             break;
                         default:
                             $this->addToBuffer($scope, $name);
