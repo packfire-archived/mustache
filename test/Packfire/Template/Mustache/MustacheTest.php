@@ -31,9 +31,6 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    /**
-     * @covers \Packfire\Template\Mustache\Mustache::template
-     */
     public function testTemplate()
     {
         $this->object->template('Good day {{name}}!');
@@ -49,18 +46,12 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Hello Jack, my name is Jill!', $this->object->render());
     }
 
-    /**
-     * @covers \Packfire\Template\Mustache\Mustache::parameters
-     */
     public function testEmptyParameters()
     {
         $this->object->parameters(array());
         $this->assertEquals('Hello !', $this->object->render());
     }
 
-    /**
-     * @covers \Packfire\Template\Mustache\Mustache::render
-     */
     public function testRender()
     {
         $this->assertEquals('Hello world!', $this->object->render());
@@ -138,6 +129,14 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         );
         $output = $mustache->parameters($params)->render();
         $this->assertEquals('Cool!', $output);
+    }
+
+    public function testTagNesting()
+    {
+        $mustache = new Mustache();
+        $mustache->template('{{^coin}}{{#coin}}COIN{{/coin}}{{/coin}}!');
+        $output = $mustache->parameters(array('coin' => false))->render();
+        $this->assertEquals('!', $output);
     }
 
     public function testInverts()
