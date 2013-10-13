@@ -73,6 +73,27 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Hello Regina, my name is James Bond!', $obj->render());
     }
 
+    public function testConstructorOptions()
+    {
+        $mustache = new Mustache(
+            '[:label:]: [:>num:]',
+            array(
+                'escaper' => function ($text) {
+                    return $text;
+                },
+                'open' => '[:',
+                'close' => ':]',
+                'loader' => new Loader\Arrayloader(array('num' => 5))
+            )
+        );
+
+        $params = array(
+            'label' => '<b>Random number</b>'
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('<b>Random number</b>: 5', $output);
+    }
+
     public function testDotNotation()
     {
         $mustache = new Mustache();
