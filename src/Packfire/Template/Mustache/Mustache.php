@@ -85,11 +85,28 @@ class Mustache
     /**
      * Create a new Mustache object
      * @param string $template (optional) Set the template to render
+     * @param array $options (optional) Set a variety of options
      * @since 1.0-sofia
      */
-    public function __construct($template = null)
+    public function __construct($template = null, array $options = array())
     {
         $this->template = $template;
+
+        if (array_key_exists('loader', $options) && $options['loader'] instanceof LoaderInterface) {
+            $this->loader = $options['loader'];
+        }
+
+        if (array_key_exists('escaper', $options) && is_callable($options['escaper'])) {
+            $this->escaper = $options['escaper'];
+        }
+
+        if (array_key_exists('open', $options)) {
+            $this->openDelimiter = $options['open'];
+        }
+
+        if (array_key_exists('close', $options)) {
+            $this->closeDelimiter = $options['close'];
+        }
     }
 
     /**
