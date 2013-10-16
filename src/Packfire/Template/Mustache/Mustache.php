@@ -134,88 +134,82 @@ class Mustache
     private function parse($scopePath, $start, $end)
     {
         $buffer = '';
-        $scope = $this->scope($scopePath);
-        if ($this->isArrayOfObjects($scope)) {
-            $keys = array_keys($scope);
-            foreach ($keys as $key) {
-                $buffer .= $this->parse(array_merge($scopePath, array($key)), $start, $end);
-            }
-        } else {
-            $position = $start;
-            $templateScope = substr($this->template, $start, $end - $start);
-            while ($position < $end) {
-                $scope = $this->scope($scopePath);
-                $match = array();
-                $hasMatch = preg_match(
-                    $this->buildMatchingTag(),
-                    $templateScope,
-                    $match,
-                    PREG_OFFSET_CAPTURE,
-                    $position - $start
-                );
-                if ($hasMatch) {
-                    $tagLength = strlen($match[0][0]);
-                    $tagStart = $match[0][1];
-                    $tagEnd = $tagStart + $tagLength;
-                    $name = trim($match[5][0]);
-                    $tagType = $match[3][0];
-                    $buffer .= substr($this->template, $position, $tagStart + $start - $position);
-                    switch($tagType){
-                        case self::TYPE_COMMENT:
-                            // comment, do nothing
-                            $position = $tagEnd;
-                            break;
-                        case self::TYPE_OPEN:
-                            $position = $start + $tagEnd;
-                            $this->findClosingTag($name, $position, $end);
-                            $property = $this->property($scope, $name);
-                            if ($property) {
-                                if (is_scalar($property)) {
-                                    $path = $scopePath;
-                                } else {
-                                    $path = array_merge($scopePath, array($name));
-                                }
-                                $buffer .= $this->parse($path, $start + $tagEnd, $position);
+        $position = $start;
+        $templateScope = substr($this->template, $start, $end - $start);
+        while ($position < $end) {
+            $match = array();
+            $hasMatch = preg_match(
+                $this->buildMatchingTag(),
+                $templateScope,
+                $match,
+                PREG_OFFSET_CAPTURE,
+                $position - $start
+            );
+            if ($hasMatch) {
+                $tagLength = strlen($match[0][0]);
+                $tagStart = $match[0][1];
+                $tagEnd = $tagStart + $tagLength;
+                $name = trim($match[5][0]);
+                $tagType = $match[3][0];
+                $buffer .= substr($this->template, $position, $tagStart + $start - $position);
+                switch($tagType){
+                    case self::TYPE_COMMENT:
+                        // comment, do nothing
+                        $position = $tagEnd;
+                        break;
+                    case self::TYPE_OPEN:
+                        $position = $start + $tagEnd;
+                        $this->findClosingTag($name, $position, $end);
+                        $property = $this->scope(array_merge($scopePath, array($name)));
+                        if ($this->isArrayOfObjects($property)) {
+                            $keys = array_keys($property);
+                            foreach ($keys as $key) {
+                                $buffer .= $this->parse(array_merge($scopePath, array($name, $key)), $start + $tagEnd, $position);
                             }
-                            $position += $tagLength;
-                            break;
-                        case self::TYPE_INVERT:
-                            $position = $start + $tagEnd;
-                            $this->findClosingTag($name, $position, $end);
-                            $property = $this->property($scope, $name);
-                            if (!$property) {
-                                $buffer .= $this->parse($scopePath, $start + $tagEnd, $position);
-                            }
-                            $position += $tagLength;
-                            break;
-                        case self::TYPE_PARTIAL1:
-                        case self::TYPE_PARTIAL2:
-                            $buffer .= $this->partial($name, $scope);
-                            $position = $start + $tagEnd;
-                            break;
-                        case self::TYPE_CHANGETAG:
-                            if (substr($name, -1) == '=') {
-                                $name = substr($name, 0, strlen($name) - 1);
-                            }
-                            list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
-                            $position = $tagEnd;
-                            break;
-                        case self::TYPE_UNESCAPETRIPLE:
-                        case self::TYPE_UNESCAPE:
-                            $this->addToBuffer($buffer, $scope, $name, false);
-                            $position = $start + $tagEnd;
-                            break;
-                            break;
-                        default:
-                            $this->addToBuffer($buffer, $scope, $name);
-                            $position = $start + $tagEnd;
-                            break;
-                    }
-                } else {
-                    // no more found
-                    $buffer .= substr($this->template, $position, $end - $position);
-                    $position = $end;
+                        } elseif ($property) {
+                            $buffer .= $this->parse(array_merge($scopePath, array($name)), $start + $tagEnd, $position);
+                        }
+                        $position += $tagLength;
+                        break;
+                    case self::TYPE_INVERT:
+                        $position = $start + $tagEnd;
+                        $this->findClosingTag($name, $position, $end);
+                        $property = $this->scope(array_merge($scopePath, array($name)));
+                        if (!$property) {
+                            $buffer .= $this->parse($scopePath, $start + $tagEnd, $position);
+                        }
+                        $position += $tagLength;
+                        break;
+                    case self::TYPE_PARTIAL1:
+                    case self::TYPE_PARTIAL2:
+                        $property = $this->scope(array_merge($scopePath, array($name)));
+                        $buffer .= $this->partial($name, $property);
+                        $position = $start + $tagEnd;
+                        break;
+                    case self::TYPE_CHANGETAG:
+                        if (substr($name, -1) == '=') {
+                            $name = substr($name, 0, strlen($name) - 1);
+                        }
+                        list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
+                        $position = $start + $tagEnd;
+                        break;
+                    case self::TYPE_UNESCAPETRIPLE:
+                    case self::TYPE_UNESCAPE:
+                        $property = $this->scope(array_merge($scopePath, array($name)));
+                        $this->addToBuffer($buffer, $property, $name, false);
+                        $position = $start + $tagEnd;
+                        break;
+                        break;
+                    default:
+                        $property = $this->scope(array_merge($scopePath, array($name)));
+                        $this->addToBuffer($buffer, $property, $name);
+                        $position = $start + $tagEnd;
+                        break;
                 }
+            } else {
+                // no more found
+                $buffer .= substr($this->template, $position, $end - $position);
+                $position = $end;
             }
         }
         return $buffer;
@@ -223,72 +217,60 @@ class Mustache
 
     protected function scope($path)
     {
-        $scope = $this->parameters;
-        foreach ($path as $item) {
-            if (isset($scope[$item])) {
-                $scope = $scope[$item];
-            } else {
-                $scope = null;
+        $path = self::processDotNotation($path);
+        $originalPath = $path;
+        $scope = null;
+        while (count($path) > 0) {
+            $scope = $this->parameters;
+            foreach ($path as $item) {
+                $scope = (array)$scope;
+                if (isset($scope[$item])) {
+                    $scope = $scope[$item];
+                } else {
+                    $scope = null;
+                    break;
+                }
+            }
+            if ($scope !== null) {
                 break;
             }
+            array_shift($path);
+        }
+        if (is_callable($scope)) {
+            $scope = call_user_func($scope);
         }
         return $scope;
     }
 
-    /**
-     * Get the property from the scope.
-     * Note that if property is not found in the scope, the
-     * method will look from the parent-most scope.
-     * @param mixed $scope The scope to get the property from
-     * @param string $name Name of the property
-     * @return mixed Returns the property fetched.
-     * @since 1.0-sofia
-     */
-    private function property($scope, $name)
+    protected static function processDotNotation($path)
     {
-        $result = null;
-        $names = explode('.', $name);
-        $originalScope = $scope;
-        foreach ($names as $name) {
-            if (is_object($scope)) {
-                if (property_exists($scope, $name)) {
-                    $result = $scope->$name;
-                }
-            } elseif (is_array($scope)) {
-                if (array_key_exists($name, $scope)) {
-                    $result = $scope[$name];
-                }
-            }
-            if (is_callable($result)) {
-                $result = call_user_func($result);
-            }
-            $scope = $result;
-        }
-        if ($originalScope !== $this->parameters && $result === null) {
-            $result = $this->property($this->parameters, $name);
+        $result = array();
+        foreach ($path as $item) {
+            $items = explode('.', $item);
+            $result = array_merge($result, $items);
         }
         return $result;
     }
 
     /**
      * Add a property to the buffer and determine if it should be escaped
-     * @param mixed $scope The scope of to get the property from
+     * @param string $buffer The output buffer
+     * @param mixed $property The data to add into the buffer
      * @param mixed $name The name of the property
-     * @param boolean $escape (optional) Set whether to escape the property. 
+     * @param boolean $escape (optional) Set whether to escape the property.
      *                 Set this to true for escaping, and false otherwise.
      *                 Defaults to true.
      * @since 1.0-sofia
      */
-    private function addToBuffer(&$buffer, $scope, $name, $escape = true)
+    private function addToBuffer(&$buffer, $property, $name, $escape = true)
     {
-        $result = $this->property($scope, $name);
-        if (is_array($result)) {
-            $result = implode('', $result);
+        if (is_array($property)) {
+            $property = implode('', $property);
         }
         if ($escape) {
-            $result = call_user_func($this->escaper, $result);
+            $property = call_user_func($this->escaper, $property);
         }
-        $buffer .= $result;
+        $buffer .= $property;
     }
 
     /**
