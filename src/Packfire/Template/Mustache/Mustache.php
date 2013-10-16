@@ -248,6 +248,7 @@ class Mustache
     {
         $result = null;
         $names = explode('.', $name);
+        $originalScope = $scope;
         foreach ($names as $name) {
             if (is_object($scope)) {
                 if (property_exists($scope, $name)) {
@@ -262,6 +263,9 @@ class Mustache
                 $result = call_user_func($result);
             }
             $scope = $result;
+        }
+        if ($originalScope !== $this->parameters && $result === null) {
+            $result = $this->property($this->parameters, $name);
         }
         return $result;
     }
