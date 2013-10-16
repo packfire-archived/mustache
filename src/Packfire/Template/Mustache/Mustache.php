@@ -347,7 +347,7 @@ class Mustache
      */
     private function isArrayOfObjects($scope)
     {
-        return is_array($scope) && (count($scope) == 0 || array_keys($scope) === range(0, count($scope) - 1)) && !is_scalar($scope[0]);
+        return is_array($scope) && count($scope) > 0 && array_keys($scope) === range(0, count($scope) - 1) && !is_scalar($scope[0]);
     }
 
     /**
