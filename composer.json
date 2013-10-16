@@ -1,12 +1,16 @@
 {
     "name": "packfire/mustache",
     "description": "PHP Mustache Implementation",
+    "type": "library",
     "authors": [
         {
             "name": "Sam-Mauris Yong",
-            "email": "sam@mauris.sg"
+            "email": "sam@mauris.sg",
+            "homepage": "http://mauris.sg/",
+            "role": "Developer"
         }
     ],
+    "license": "BSD-3-Clause",
     "require": {
         "php": ">=5.3.0"
     },
