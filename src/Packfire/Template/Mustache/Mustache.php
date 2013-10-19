@@ -27,7 +27,7 @@ class Mustache
      * The tag regular expression
      * @since 1.0-sofia
      */
-    const TAG_REGEX = '`(\s*)(%s([\^&#\=/{\!\>\<]{0,1})(%s)%s)(\s*)`is';
+    const TAG_REGEX = '`(\s*)(%s([%s]{0,1})(%s)%s)(\s*)`is';
 
     const TYPE_NORMAL = '';
     const TYPE_OPEN = '#';
@@ -149,7 +149,7 @@ class Mustache
                 $tagLength = strlen($match[0][0]);
                 $tagStart = $match[0][1];
                 $tagEnd = $tagStart + $tagLength;
-                $name = trim($match[5][0]);
+                $name = trim($match[4][0]);
                 $tagType = $match[3][0];
                 $buffer .= substr($this->template, $position, $tagStart + $start - $position);
                 $isStandalone = substr(trim($match[1][0], " \t\r\0\x0B"), 0, 1) == "\n" && substr(trim($match[6][0], " \t\r\0\x0B"), 0, 1) == "\n";
