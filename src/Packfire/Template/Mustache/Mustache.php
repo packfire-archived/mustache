@@ -306,7 +306,6 @@ class Mustache
         return $this;
     }
 
-
     /**
      * Get the partial by name and add to the buffer
      * @param string $name Name of the partial
@@ -358,7 +357,7 @@ class Mustache
         while ($position < $end && $notDone) {
             $match = array();
             $hasMatch = preg_match(
-                $this->buildMatchingTag($name),
+                $this->buildMatchingTag('(' . preg_quote($name) . ')'),
                 $templateScope,
                 $match,
                 PREG_OFFSET_CAPTURE,
@@ -451,7 +450,7 @@ class Mustache
      * @return string Returns the final regular expression
      * @since 1.0-sofia
      */
-    private function buildMatchingTag($name = '([^}].+?)([}]{0,1})')
+    private function buildMatchingTag($name = '(.+?)')
     {
         return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), $name, preg_quote($this->closeDelimiter));
     }
