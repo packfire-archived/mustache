@@ -8,7 +8,7 @@ class Tokenizer
      * The tag regular expression
      * @since 1.2.0
      */
-    const TAG_REGEX = '`(%s)([%s]{0,1})(%s)(%s)`is';
+    const TAG_REGEX = '`%s([%s]{0,1})(%s)%s`is';
 
     const TYPE_NORMAL = '';
     const TYPE_OPEN = '#';
@@ -28,6 +28,7 @@ class Tokenizer
 
     const TOKEN_TYPE = 'type';
     const TOKEN_NAME = 'name';
+    const TOKEN_TAG_TYPE = 'tagType';
     const TOKEN_OPEN_DELIMITER = 'open';
     const TOKEN_CLOSE_DELIMITER = 'close';
     const TOKEN_POSITION = 'position';
