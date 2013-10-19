@@ -52,6 +52,13 @@ class Tokenizer
     protected $closeDelimiter = '}}';
 
     /**
+     * The current line number
+     * @var integer
+     * @since 1.2.0
+     */
+    protected $line = array();
+
+    /**
      * The tokens result
      * @var array
      * @since 1.2.0
@@ -62,6 +69,7 @@ class Tokenizer
     {
         $textLength = strlen($text);
         $position = 0;
+        $this->line = 1;
         while ($position < $textLength) {
             $match = array();
             $newlinePosition = strpos($text, "\n", $position);
@@ -91,14 +99,15 @@ class Tokenizer
                         self::TOKEN_VALUE => $subText
                     );
                 }
-                $position = $newlinePosition;
             }
+            $position = $newlinePosition;
             if (substr($text, $position, 1) === "\n") {
                 $this->tokens[] = array(
                     self::TOKEN_TYPE => self::TOKEN_TYPE_NEWLINE,
                     self::TOKEN_VALUE => "\n"
                 );
-                $position += 1;
+                ++$this->line;
+                ++$position;
             }
         }
         return $this->tokens;
