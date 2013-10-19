@@ -359,7 +359,7 @@ class Mustache
         while ($position < $end && $notDone) {
             $match = array();
             $hasMatch = preg_match(
-                $this->buildMatchingTag('(' . preg_quote($name) . ')'),
+                $this->buildMatchingTag(preg_quote($name), '/'),
                 $templateScope,
                 $match,
                 PREG_OFFSET_CAPTURE,
@@ -452,8 +452,8 @@ class Mustache
      * @return string Returns the final regular expression
      * @since 1.0-sofia
      */
-    private function buildMatchingTag($name = '(.+?)')
+    private function buildMatchingTag($name = '(.+?)', $type = '^&#={!><')
     {
-        return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), $name, preg_quote($this->closeDelimiter));
+        return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), preg_quote($type), $name, preg_quote($this->closeDelimiter));
     }
 }
