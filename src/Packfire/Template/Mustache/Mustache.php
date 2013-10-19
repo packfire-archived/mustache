@@ -358,7 +358,7 @@ class Mustache
         while ($position < $end) {
             $match = array();
             $hasMatch = preg_match(
-                $this->buildMatchingTag(preg_quote($name), '/'),
+                $this->buildMatchingTag(preg_quote($name), '/#^'),
                 $templateScope,
                 $match,
                 PREG_OFFSET_CAPTURE,
