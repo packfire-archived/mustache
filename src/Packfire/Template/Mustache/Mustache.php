@@ -166,17 +166,19 @@ class Mustache
                         $position = $start + $tagEnd;
                         $endTagLength = $this->findClosingTag($name, $position, $end);
                         $property = $this->scope(array_merge($scopePath, array($name)));
-                        if ($this->isArrayOfObjects($property)) {
-                            $keys = array_keys($property);
-                            foreach ($keys as $key) {
-                                $buffer .= $this->parse(array_merge($scopePath, array($name, $key)), $start + $tagEnd, $position);
+                        if ($property) {
+                            if ($this->isArrayOfObjects($property)) {
+                                $keys = array_keys($property);
+                                foreach ($keys as $key) {
+                                    $buffer .= $this->parse(array_merge($scopePath, array($name, $key)), $start + $tagEnd, $position);
+                                }
+                            } else {
+                                $path = $scopePath;
+                                if (!is_scalar($property)) {
+                                    $path = array_merge($scopePath, array($name));
+                                }
+                                $buffer .= $this->parse($path, $start + $tagEnd, $position);
                             }
-                        } elseif ($property) {
-                            $path = $scopePath;
-                            if (!is_scalar($property)) {
-                                $path = array_merge($scopePath, array($name));
-                            }
-                            $buffer .= $this->parse($path, $start + $tagEnd, $position);
                         }
                         $position += $endTagLength;
                         break;
