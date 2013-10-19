@@ -93,6 +93,7 @@ class Tokenizer
                 if (strlen($subText)) {
                     $this->tokens[] = array(
                         self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
+                        self::TOKEN_LINE => $this->line,
                         self::TOKEN_VALUE => $subText
                     );
                 }
@@ -102,6 +103,7 @@ class Tokenizer
                 if (strlen($subText)) {
                     $this->tokens[] = array(
                         self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
+                        self::TOKEN_LINE => $this->line,
                         self::TOKEN_VALUE => $subText
                     );
                 }
@@ -110,6 +112,7 @@ class Tokenizer
                 if (strlen($subText)) {
                     $this->tokens[] = array(
                         self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
+                        self::TOKEN_LINE => $this->line,
                         self::TOKEN_VALUE => $subText
                     );
                 }
