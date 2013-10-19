@@ -192,6 +192,13 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('samjohnhenry!', $output);
     }
 
+    public function testSwitchImmediate()
+    {
+        $mustache = new Mustache();
+        $mustache->template("Testing is {{#bool}}awesome{{/bool}}{{^bool}}bad{{/bool}}.");
+        $output = $mustache->render();
+        $this->assertEquals("Testing is bad.", $output);
+    }
 
     public function testDelimiterChange()
     {
