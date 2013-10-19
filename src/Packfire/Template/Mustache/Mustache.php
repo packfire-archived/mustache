@@ -27,7 +27,7 @@ class Mustache
      * The tag regular expression
      * @since 1.0-sofia
      */
-    const TAG_REGEX = '`((%s)([\^&#\=/{\!\>\<]{0,1})(%s)(%s))`is';
+    const TAG_REGEX = '`(\s*)(%s([\^&#\=/{\!\>\<]{0,1})(%s)%s)(\s*)`is';
 
     const TYPE_NORMAL = '';
     const TYPE_OPEN = '#';
@@ -152,6 +152,10 @@ class Mustache
                 $name = trim($match[5][0]);
                 $tagType = $match[3][0];
                 $buffer .= substr($this->template, $position, $tagStart + $start - $position);
+                $isStandalone = substr(trim($match[1][0], " \t\r\0\x0B"), 0, 1) == "\n" && substr(trim($match[6][0], " \t\r\0\x0B"), 0, 1) == "\n";
+                if (!$isStandalone) {
+                    $buffer .= $match[1][0];
+                }
                 switch($tagType){
                     case self::TYPE_COMMENT:
                         // comment, do nothing
@@ -203,13 +207,13 @@ class Mustache
                         $this->addToBuffer($buffer, $property, $name, false);
                         $position = $start + $tagEnd;
                         break;
-                        break;
                     default:
                         $property = $this->scope(array_merge($scopePath, array($name)));
                         $this->addToBuffer($buffer, $property, $name);
                         $position = $start + $tagEnd;
                         break;
                 }
+                $buffer .= $match[6][0];
             } else {
                 // no more found
                 $buffer .= substr($this->template, $position, $end - $position);
