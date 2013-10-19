@@ -27,7 +27,7 @@ class Mustache
      * The tag regular expression
      * @since 1.0-sofia
      */
-    const TAG_REGEX = '`(\s*)(%s([\^&#\=/{\!\>\<]{0,1})(%s)%s)(\s*)`is';
+    const TAG_REGEX = '`(\s*)(%s([%s]{0,1})(%s)%s)(\s*)`is';
 
     const TYPE_NORMAL = '';
     const TYPE_OPEN = '#';
@@ -149,7 +149,7 @@ class Mustache
                 $tagLength = strlen($match[0][0]);
                 $tagStart = $match[0][1];
                 $tagEnd = $tagStart + $tagLength;
-                $name = trim($match[5][0]);
+                $name = trim($match[4][0]);
                 $tagType = $match[3][0];
                 $buffer .= substr($this->template, $position, $tagStart + $start - $position);
                 $isStandalone = substr(trim($match[1][0], " \t\r\0\x0B"), 0, 1) == "\n" && substr(trim($match[6][0], " \t\r\0\x0B"), 0, 1) == "\n";
@@ -160,11 +160,11 @@ class Mustache
                     case self::TYPE_COMMENT:
                     case self::TYPE_CLOSE:
                         // comment, do nothing
-                        $position = $tagEnd;
+                        $position = $start + $tagEnd;
                         break;
                     case self::TYPE_OPEN:
                         $position = $start + $tagEnd;
-                        $this->findClosingTag($name, $position, $end);
+                        $endTagLength = $this->findClosingTag($name, $position, $end);
                         $property = $this->scope(array_merge($scopePath, array($name)));
                         if ($this->isArrayOfObjects($property)) {
                             $keys = array_keys($property);
@@ -178,16 +178,16 @@ class Mustache
                             }
                             $buffer .= $this->parse($path, $start + $tagEnd, $position);
                         }
-                        $position += $tagLength;
+                        $position += $endTagLength;
                         break;
                     case self::TYPE_INVERT:
-                        $position = $start + $tagEnd;
-                        $this->findClosingTag($name, $position, $end);
+                        $position = $tagEnd;
+                        $endTagLength = $this->findClosingTag($name, $position, $end);
                         $property = $this->scope(array_merge($scopePath, array($name)));
                         if (!$property) {
                             $buffer .= $this->parse($scopePath, $start + $tagEnd, $position);
                         }
-                        $position += $tagLength;
+                        $position += $endTagLength;
                         break;
                     case self::TYPE_PARTIAL1:
                     case self::TYPE_PARTIAL2:
@@ -355,11 +355,10 @@ class Mustache
         $nest = 0;
         $templateScope = substr($this->template, $position, $end - $position);
         $start = $position;
-        $notDone = true;
-        while ($position < $end && $notDone) {
+        while ($position < $end) {
             $match = array();
             $hasMatch = preg_match(
-                $this->buildMatchingTag('(' . preg_quote($name) . ')'),
+                $this->buildMatchingTag(preg_quote($name), '/#^'),
                 $templateScope,
                 $match,
                 PREG_OFFSET_CAPTURE,
@@ -378,7 +377,7 @@ class Mustache
                     case self::TYPE_CLOSE:
                         if ($nest == 0) {
                             $position = $start + $match[0][1];
-                            $notDone = false;
+                            return $tagLength;
                         } elseif ($nest > 0) {
                             $position = $start + $tagEnd;
                             --$nest;
@@ -390,7 +389,6 @@ class Mustache
                 }
             } else {
                 $position = $end;
-                $notDone = false;
                 break;
             }
         }
@@ -452,8 +450,8 @@ class Mustache
      * @return string Returns the final regular expression
      * @since 1.0-sofia
      */
-    private function buildMatchingTag($name = '(.+?)')
+    private function buildMatchingTag($name = '(.+?)', $type = '^&#={!><')
     {
-        return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), $name, preg_quote($this->closeDelimiter));
+        return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), preg_quote($type), $name, preg_quote($this->closeDelimiter));
     }
 }
