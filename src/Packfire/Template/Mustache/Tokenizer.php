@@ -73,7 +73,6 @@ class Tokenizer
         while ($position < $textLength) {
             $match = array();
             $newlinePosition = strpos($text, "\n", $position);
-            var_dump($newlinePosition);
             if ($newlinePosition === false) {
                 $newlinePosition = $textLength;
             }
@@ -86,11 +85,26 @@ class Tokenizer
             );
             if ($hasTagMatch) {
                 // there's a tag in between
-                $this->tokens[] = array(
-                    self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
-                    self::TOKEN_VALUE => substr($text, $position, $match[0][1] - $position)
-                );
-                $position = $newlinePosition;
+                $tagLength = strlen($match[0][0]);
+                $tagStart = $match[0][1];
+                $tagEnd = $tagStart + $tagLength;
+
+                $subText = substr($text, $position, $tagStart - $position);
+                if (strlen($subText)) {
+                    $this->tokens[] = array(
+                        self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
+                        self::TOKEN_VALUE => $subText
+                    );
+                }
+                $this->tokens[] = $this->buildTagToken($match, $position);
+
+                $subText = substr($text, $tagEnd, $newlinePosition - $tagEnd);
+                if (strlen($subText)) {
+                    $this->tokens[] = array(
+                        self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
+                        self::TOKEN_VALUE => $subText
+                    );
+                }
             } else {
                 $subText = substr($text, $position, $newlinePosition - $position);
                 if (strlen($subText)) {
