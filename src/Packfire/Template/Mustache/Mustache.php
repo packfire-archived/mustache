@@ -158,6 +158,7 @@ class Mustache
                 }
                 switch($tagType){
                     case self::TYPE_COMMENT:
+                    case self::TYPE_CLOSE:
                         // comment, do nothing
                         $position = $tagEnd;
                         break;
