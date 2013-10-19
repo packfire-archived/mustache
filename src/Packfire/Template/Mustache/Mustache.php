@@ -203,6 +203,8 @@ class Mustache
                         $position = $start + $tagEnd;
                         break;
                     case self::TYPE_UNESCAPETRIPLE:
+                        $tagEnd += 1;
+                        // continue with the unescaping
                     case self::TYPE_UNESCAPE:
                         $property = $this->scope(array_merge($scopePath, array($name)));
                         $this->addToBuffer($buffer, $property, $name, false);
