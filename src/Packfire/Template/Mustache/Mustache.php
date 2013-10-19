@@ -376,8 +376,8 @@ class Mustache
                         break;
                     case self::TYPE_CLOSE:
                         if ($nest == 0) {
-                            $position = $start + $match[0][1];
-                            return $tagLength;
+                            $position = $start + $match[2][1];
+                            return $tagLength - strlen($match[1][0]);
                         } elseif ($nest > 0) {
                             $position = $start + $tagEnd;
                             --$nest;
