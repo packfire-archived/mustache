@@ -27,7 +27,7 @@ class Mustache
      * The tag regular expression
      * @since 1.0-sofia
      */
-    const TAG_REGEX = '`((%s)([\^&#\=/{\!\>\<]{0,1})(%s)(%s))`is';
+    const TAG_REGEX = '`(\s*)(%s([\^&#\=/{\!\>\<]{0,1})(%s)%s)(\s*)`is';
 
     const TYPE_NORMAL = '';
     const TYPE_OPEN = '#';
@@ -152,8 +152,13 @@ class Mustache
                 $name = trim($match[5][0]);
                 $tagType = $match[3][0];
                 $buffer .= substr($this->template, $position, $tagStart + $start - $position);
+                $isStandalone = substr(trim($match[1][0], " \t\r\0\x0B"), 0, 1) == "\n" && substr(trim($match[6][0], " \t\r\0\x0B"), 0, 1) == "\n";
+                if (!$isStandalone || !in_array($tagType, array(self::TYPE_CLOSE, self::TYPE_OPEN, self::TYPE_COMMENT, self::TYPE_CHANGETAG, self::TYPE_INVERT))) {
+                    $buffer .= $match[1][0];
+                }
                 switch($tagType){
                     case self::TYPE_COMMENT:
+                    case self::TYPE_CLOSE:
                         // comment, do nothing
                         $position = $tagEnd;
                         break;
@@ -167,7 +172,11 @@ class Mustache
                                 $buffer .= $this->parse(array_merge($scopePath, array($name, $key)), $start + $tagEnd, $position);
                             }
                         } elseif ($property) {
-                            $buffer .= $this->parse(array_merge($scopePath, array($name)), $start + $tagEnd, $position);
+                            $path = $scopePath;
+                            if (!is_scalar($property)) {
+                                $path = array_merge($scopePath, array($name));
+                            }
+                            $buffer .= $this->parse($path, $start + $tagEnd, $position);
                         }
                         $position += $tagLength;
                         break;
@@ -194,11 +203,12 @@ class Mustache
                         $position = $start + $tagEnd;
                         break;
                     case self::TYPE_UNESCAPETRIPLE:
+                        $tagEnd += 1;
+                        // continue with the unescaping
                     case self::TYPE_UNESCAPE:
                         $property = $this->scope(array_merge($scopePath, array($name)));
                         $this->addToBuffer($buffer, $property, $name, false);
                         $position = $start + $tagEnd;
-                        break;
                         break;
                     default:
                         $property = $this->scope(array_merge($scopePath, array($name)));
@@ -206,6 +216,7 @@ class Mustache
                         $position = $start + $tagEnd;
                         break;
                 }
+                $buffer .= $match[6][0];
             } else {
                 // no more found
                 $buffer .= substr($this->template, $position, $end - $position);
@@ -297,7 +308,6 @@ class Mustache
         return $this;
     }
 
-
     /**
      * Get the partial by name and add to the buffer
      * @param string $name Name of the partial
@@ -349,7 +359,7 @@ class Mustache
         while ($position < $end && $notDone) {
             $match = array();
             $hasMatch = preg_match(
-                $this->buildMatchingTag($name),
+                $this->buildMatchingTag('(' . preg_quote($name) . ')'),
                 $templateScope,
                 $match,
                 PREG_OFFSET_CAPTURE,
@@ -442,7 +452,7 @@ class Mustache
      * @return string Returns the final regular expression
      * @since 1.0-sofia
      */
-    private function buildMatchingTag($name = '([^}].+?)([}]{0,1})')
+    private function buildMatchingTag($name = '(.+?)')
     {
         return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), $name, preg_quote($this->closeDelimiter));
     }

@@ -101,6 +101,21 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Singapore 649139', $output);
     }
 
+    public function testNonScalarOpenTags()
+    {
+        $mustache = new Mustache();
+        $mustache->template('Singapore {{#person}}{{address.postalcode}}{{/person}}');
+        $params = array(
+            'person' => array(
+                'address' => array(
+                    'postalcode' => '649139'
+                )
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('Singapore 649139', $output);
+    }
+
     public function testNotSet()
     {
         $mustache = new Mustache();
@@ -194,9 +209,33 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Jump over the moon !', $output);
     }
 
+    public function testStandalone()
+    {
+        $mustache = new Mustache();
+        $mustache->template("Testing\n   {{! some comment}}\nTesting");
+        $output = $mustache->render();
+        $this->assertEquals("Testing\nTesting", $output);
+    }
+
+    public function testStandalone2()
+    {
+        $mustache = new Mustache();
+        $mustache->template("Testing\n{{#test}}\nTesting\n{{/test}}\nTesting");
+        $output = $mustache->render();
+        $this->assertEquals("Testing\nTesting", $output);
+    }
+
+    public function testStandalone3()
+    {
+        $mustache = new Mustache();
+        $mustache->template("Testing\n{{test}}\nTesting");
+        $output = $mustache->render();
+        $this->assertEquals("Testing\n\nTesting", $output);
+    }
+
     public function testEscapeTest()
     {
-        $this->object->template('Good day {{name}}!');
+        $this->object->template('Good day {{ name }}!');
         $this->assertEquals('Good day &lt;b&gt;name&lt;/b&gt;!', $this->object->parameters(array('name' => '<b>name</b>'))->render());
     }
 
