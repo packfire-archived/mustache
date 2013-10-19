@@ -355,8 +355,7 @@ class Mustache
         $nest = 0;
         $templateScope = substr($this->template, $position, $end - $position);
         $start = $position;
-        $notDone = true;
-        while ($position < $end && $notDone) {
+        while ($position < $end) {
             $match = array();
             $hasMatch = preg_match(
                 $this->buildMatchingTag(preg_quote($name), '/'),
@@ -373,24 +372,24 @@ class Mustache
                     case self::TYPE_INVERT:
                     case self::TYPE_OPEN:
                         ++$nest;
-                        $position = $start + $tagEnd;
+                        $position += $tagEnd;
                         break;
                     case self::TYPE_CLOSE:
                         if ($nest == 0) {
-                            $position = $start + $match[0][1];
-                            $notDone = false;
+                            $position += $match[0][1];
+                            break 2;
                         } elseif ($nest > 0) {
-                            $position = $start + $tagEnd;
+                            $position += $tagEnd;
                             --$nest;
                         }
                         break;
                     default:
-                        $position = $start + $tagEnd;
+                        $position += $tagEnd;
                         break;
                 }
+                return $tagLength;
             } else {
                 $position = $end;
-                $notDone = false;
                 break;
             }
         }
