@@ -160,11 +160,11 @@ class Mustache
                     case self::TYPE_COMMENT:
                     case self::TYPE_CLOSE:
                         // comment, do nothing
-                        $position = $tagEnd;
+                        $position = $start + $tagEnd;
                         break;
                     case self::TYPE_OPEN:
                         $position = $start + $tagEnd;
-                        $this->findClosingTag($name, $position, $end);
+                        $endTagLength = $this->findClosingTag($name, $position, $end);
                         $property = $this->scope(array_merge($scopePath, array($name)));
                         if ($this->isArrayOfObjects($property)) {
                             $keys = array_keys($property);
@@ -178,16 +178,16 @@ class Mustache
                             }
                             $buffer .= $this->parse($path, $start + $tagEnd, $position);
                         }
-                        $position += $tagLength;
+                        $position += $endTagLength;
                         break;
                     case self::TYPE_INVERT:
-                        $position = $start + $tagEnd;
-                        $this->findClosingTag($name, $position, $end);
+                        $position = $tagEnd;
+                        $endTagLength = $this->findClosingTag($name, $position, $end);
                         $property = $this->scope(array_merge($scopePath, array($name)));
                         if (!$property) {
                             $buffer .= $this->parse($scopePath, $start + $tagEnd, $position);
                         }
-                        $position += $tagLength;
+                        $position += $endTagLength;
                         break;
                     case self::TYPE_PARTIAL1:
                     case self::TYPE_PARTIAL2:
@@ -372,22 +372,21 @@ class Mustache
                     case self::TYPE_INVERT:
                     case self::TYPE_OPEN:
                         ++$nest;
-                        $position += $tagEnd;
+                        $position = $start + $tagEnd;
                         break;
                     case self::TYPE_CLOSE:
                         if ($nest == 0) {
-                            $position += $match[0][1];
-                            break 2;
+                            $position = $start + $match[0][1];
+                            return $tagLength;
                         } elseif ($nest > 0) {
-                            $position += $tagEnd;
+                            $position = $start + $tagEnd;
                             --$nest;
                         }
                         break;
                     default:
-                        $position += $tagEnd;
+                        $position = $start + $tagEnd;
                         break;
                 }
-                return $tagLength;
             } else {
                 $position = $end;
                 break;
