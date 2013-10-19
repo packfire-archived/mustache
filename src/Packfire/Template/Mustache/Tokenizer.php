@@ -113,6 +113,18 @@ class Tokenizer
         return $this->tokens;
     }
 
+    protected function buildTagToken($match, $position)
+    {
+        return array(
+            self::TOKEN_TYPE => self::TOKEN_TYPE_TAG,
+            self::TOKEN_TAG_TYPE => $match[1][0],
+            self::TOKEN_NAME => $match[2][0],
+            self::TOKEN_LINE => $this->line,
+            self::TOKEN_OPEN_DELIMITER => $this->openDelimiter,
+            self::TOKEN_CLOSE_DELIMITER => $this->closeDelimiter
+        );
+    }
+
     /**
      * Build the tag matching regular expression
      * @param string $name (optional) The tag name to match
