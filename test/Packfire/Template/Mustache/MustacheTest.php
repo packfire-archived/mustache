@@ -101,6 +101,21 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Singapore 649139', $output);
     }
 
+    public function testNonScalarOpenTags()
+    {
+        $mustache = new Mustache();
+        $mustache->template('Singapore {{#person}}{{address.postalcode}}{{/person}}');
+        $params = array(
+            'person' => array(
+                'address' => array(
+                    'postalcode' => '649139'
+                )
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('Singapore 649139', $output);
+    }
+
     public function testNotSet()
     {
         $mustache = new Mustache();
