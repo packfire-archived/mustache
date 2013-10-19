@@ -167,7 +167,11 @@ class Mustache
                                 $buffer .= $this->parse(array_merge($scopePath, array($name, $key)), $start + $tagEnd, $position);
                             }
                         } elseif ($property) {
-                            $buffer .= $this->parse(array_merge($scopePath, array($name)), $start + $tagEnd, $position);
+                            $path = $scopePath;
+                            if (!is_scalar($property)) {
+                                $path = array_merge($scopePath, array($name));
+                            }
+                            $buffer .= $this->parse($path, $start + $tagEnd, $position);
                         }
                         $position += $tagLength;
                         break;
