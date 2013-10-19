@@ -153,7 +153,7 @@ class Mustache
                 $tagType = $match[3][0];
                 $buffer .= substr($this->template, $position, $tagStart + $start - $position);
                 $isStandalone = substr(trim($match[1][0], " \t\r\0\x0B"), 0, 1) == "\n" && substr(trim($match[6][0], " \t\r\0\x0B"), 0, 1) == "\n";
-                if (!$isStandalone) {
+                if (!$isStandalone || !in_array($tagType, array(self::TYPE_CLOSE, self::TYPE_OPEN, self::TYPE_COMMENT, self::TYPE_CHANGETAG, self::TYPE_INVERT))) {
                     $buffer .= $match[1][0];
                 }
                 switch($tagType){
