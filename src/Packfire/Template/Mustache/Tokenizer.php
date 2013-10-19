@@ -8,7 +8,7 @@ class Tokenizer
      * The tag regular expression
      * @since 1.2.0
      */
-    const TAG_REGEX = '`(\s*)(%s([%s]{0,1})(%s)%s)(\s*)`is';
+    const TAG_REGEX = '`(%s)([%s]{0,1})(%s)(%s)`is';
 
     const TYPE_NORMAL = '';
     const TYPE_OPEN = '#';
@@ -109,7 +109,7 @@ class Tokenizer
      * @return string Returns the final regular expression
      * @since 1.2.0
      */
-    private function buildMatchingTag($name = '(.+?)', $type = '^&#={!><')
+    private function buildMatchingTag($name = '.+?', $type = '^&#={!><')
     {
         return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), preg_quote($type), $name, preg_quote($this->closeDelimiter));
     }
