@@ -88,6 +88,10 @@ class Tokenizer
                 $tagLength = strlen($match[0][0]);
                 $tagStart = $match[0][1];
                 $tagEnd = $tagStart + $tagLength;
+                if ($match[1][0] == self::TYPE_UNESCAPETRIPLE) {
+                    $tagLength += 1;
+                    $tagEnd += 1;
+                }
 
                 $subText = substr($text, $position, $tagStart - $position);
                 if (strlen($subText)) {
@@ -97,6 +101,7 @@ class Tokenizer
                         self::TOKEN_VALUE => $subText
                     );
                 }
+
                 $this->tokens[] = $this->buildTagToken($match, $position);
 
                 $subText = substr($text, $tagEnd, $newlinePosition - $tagEnd);
