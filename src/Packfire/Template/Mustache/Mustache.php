@@ -113,6 +113,67 @@ class Mustache
     private function parse($scope, $tokens)
     {
         $buffer = '';
+        foreach ($tokens as $token) {
+            switch ($token[Tokenizer::TOKEN_TYPE]) {
+                case Tokenizer::TYPE_OPEN:
+                    $name = $token[Tokenizer::TOKEN_NAME];
+                    $property = $this->scope(array_merge($scope, array($name)));
+                    if ($property) {
+                        if ($this->isArrayOfObjects($property)) {
+                            $path = array_merge($scope, array($name));
+                            foreach ($property as $item) {
+                                $buffer .= $this->parse($path, $token[Tokenizer::TOKEN_NODES]);
+                            }
+                        } else {
+                            $path = $scope;
+                            if (!is_scalar($property)) {
+                                $path = array_merge($scope, array($name));
+                            }
+                            $buffer .= $this->parse($path, $token[Tokenizer::TOKEN_NODES]);
+                        }
+                    }
+                    break;
+                case Tokenizer::TYPE_INVERT:
+                    $name = $token[Tokenizer::TOKEN_NAME];
+                    $property = $this->scope(array_merge($scope, array($name)));
+                    if (!$property) {
+                        $buffer .= $this->parse($scope, $token[Tokenizer::TOKEN_NODES]);
+                    }
+                    break;
+                case Tokenizer::TYPE_CLOSE:
+                    break;
+                case Tokenizer::TYPE_NORMAL:
+                    $name = $token[Tokenizer::TOKEN_NAME];
+                    $property = $this->scope(array_merge($scope, array($name)));
+                    if ($property) {
+                        if (is_array($property)) {
+                            $property = implode('', $property);
+                        }
+                        $buffer .= call_user_func($this->escaper, $property);
+                    }
+                    break;
+                case Tokenizer::TYPE_UNESCAPETRIPLE:
+                case Tokenizer::TYPE_UNESCAPE:
+                    $name = $token[Tokenizer::TOKEN_NAME];
+                    $property = $this->scope(array_merge($scope, array($name)));
+                    if ($property) {
+                        if (is_array($property)) {
+                            $property = implode('', $property);
+                        }
+                        $buffer .= $property;
+                    }
+                    break;
+                case Tokenizer::TYPE_TEXT:
+                    $buffer .= $token[Tokenizer::TOKEN_VALUE];
+                    break;
+                case Tokenizer::TYPE_LINE:
+                    $buffer .= $token[Tokenizer::TOKEN_VALUE];
+                    break;
+                case Tokenizer::TYPE_PARTIAL1:
+                case Tokenizer::TYPE_PARTIAL2:
+                    $name = $token[Tokenizer::TOKEN_NAME];
+                    $buffer .= $this->partial($name, $scope);
+                    break;
             }
         }
         return $buffer;
