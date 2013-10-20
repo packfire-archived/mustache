@@ -22,38 +22,6 @@ namespace Packfire\Template\Mustache;
  */
 class Mustache
 {
-
-    /**
-     * The tag regular expression
-     * @since 1.0-sofia
-     */
-    const TAG_REGEX = '`(\s*)(%s([%s]{0,1})(%s)%s)(\s*)`is';
-
-    const TYPE_NORMAL = '';
-    const TYPE_OPEN = '#';
-    const TYPE_CLOSE = '/';
-    const TYPE_UNESCAPE = '&';
-    const TYPE_UNESCAPETRIPLE = '{';
-    const TYPE_INVERT = '^';
-    const TYPE_COMMENT = '!';
-    const TYPE_PARTIAL1 = '>';
-    const TYPE_PARTIAL2 = '<';
-    const TYPE_CHANGETAG = '=';
-
-    /**
-     * The opening delimiter
-     * @var string
-     * @since 1.0.1
-     */
-    protected $openDelimiter = '{{';
-
-    /**
-     * The closing delimiter
-     * @var string
-     * @since 1.0.1
-     */
-    protected $closeDelimiter = '}}';
-
     /**
      * The template to be parsed
      * @var string
@@ -124,105 +92,13 @@ class Mustache
     /**
      * Perform parsing of a scope
      * @param mixed $scope The parameter scope to work with
-     * @param integer $start The start position of the template string
-     *              to start working from
-     * @param integer $end The end position of the template string
-     *              to stop working at
+     * @param array $tokens The array of tokens to parse
      * @return string Returns the parsed text
-     * @since 1.1.0
+     * @since 1.2.0
      */
-    private function parse($scopePath, $start, $end)
+    private function parse($scope, $tokens)
     {
         $buffer = '';
-        $position = $start;
-        $templateScope = substr($this->template, $start, $end - $start);
-        while ($position < $end) {
-            $match = array();
-            $hasMatch = preg_match(
-                $this->buildMatchingTag(),
-                $templateScope,
-                $match,
-                PREG_OFFSET_CAPTURE,
-                $position - $start
-            );
-            if ($hasMatch) {
-                $tagLength = strlen($match[0][0]);
-                $tagStart = $match[0][1];
-                $tagEnd = $tagStart + $tagLength;
-                $name = trim($match[4][0]);
-                $tagType = $match[3][0];
-                $buffer .= substr($this->template, $position, $tagStart + $start - $position);
-                $isStandalone = substr(trim($match[1][0], " \t\r\0\x0B"), 0, 1) == "\n" && substr(trim($match[6][0], " \t\r\0\x0B"), 0, 1) == "\n";
-                if (!$isStandalone || !in_array($tagType, array(self::TYPE_CLOSE, self::TYPE_OPEN, self::TYPE_COMMENT, self::TYPE_CHANGETAG, self::TYPE_INVERT))) {
-                    $buffer .= $match[1][0];
-                }
-                switch($tagType){
-                    case self::TYPE_COMMENT:
-                    case self::TYPE_CLOSE:
-                        // comment, do nothing
-                        $position = $start + $tagEnd;
-                        break;
-                    case self::TYPE_OPEN:
-                        $position = $start + $tagEnd;
-                        $endTagLength = $this->findClosingTag($name, $position, $end);
-                        $property = $this->scope(array_merge($scopePath, array($name)));
-                        if ($property) {
-                            if ($this->isArrayOfObjects($property)) {
-                                $keys = array_keys($property);
-                                foreach ($keys as $key) {
-                                    $buffer .= $this->parse(array_merge($scopePath, array($name, $key)), $start + $tagEnd, $position);
-                                }
-                            } else {
-                                $path = $scopePath;
-                                if (!is_scalar($property)) {
-                                    $path = array_merge($scopePath, array($name));
-                                }
-                                $buffer .= $this->parse($path, $start + $tagEnd, $position);
-                            }
-                        }
-                        $position += $endTagLength;
-                        break;
-                    case self::TYPE_INVERT:
-                        $position = $tagEnd;
-                        $endTagLength = $this->findClosingTag($name, $position, $end);
-                        $property = $this->scope(array_merge($scopePath, array($name)));
-                        if (!$property) {
-                            $buffer .= $this->parse($scopePath, $start + $tagEnd, $position);
-                        }
-                        $position += $endTagLength;
-                        break;
-                    case self::TYPE_PARTIAL1:
-                    case self::TYPE_PARTIAL2:
-                        $property = $this->scope(array_merge($scopePath, array($name)));
-                        $buffer .= $this->partial($name, $property);
-                        $position = $start + $tagEnd;
-                        break;
-                    case self::TYPE_CHANGETAG:
-                        if (substr($name, -1) == '=') {
-                            $name = substr($name, 0, strlen($name) - 1);
-                        }
-                        list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
-                        $position = $start + $tagEnd;
-                        break;
-                    case self::TYPE_UNESCAPETRIPLE:
-                        $tagEnd += 1;
-                        // continue with the unescaping
-                    case self::TYPE_UNESCAPE:
-                        $property = $this->scope(array_merge($scopePath, array($name)));
-                        $this->addToBuffer($buffer, $property, $name, false);
-                        $position = $start + $tagEnd;
-                        break;
-                    default:
-                        $property = $this->scope(array_merge($scopePath, array($name)));
-                        $this->addToBuffer($buffer, $property, $name);
-                        $position = $start + $tagEnd;
-                        break;
-                }
-                $buffer .= $match[6][0];
-            } else {
-                // no more found
-                $buffer .= substr($this->template, $position, $end - $position);
-                $position = $end;
             }
         }
         return $buffer;
@@ -345,58 +221,6 @@ class Mustache
     }
 
     /**
-     * Find the closing tag and shift the position variable to the front
-     * of the closing tag.
-     * @param string $name The name of the closing tag to find
-     * @param string $position The position to be set to
-     * @param string $end The end of the tempalte scope
-     * @since 1.0-sofia
-     */
-    private function findClosingTag($name, &$position, $end)
-    {
-        $nest = 0;
-        $templateScope = substr($this->template, $position, $end - $position);
-        $start = $position;
-        while ($position < $end) {
-            $match = array();
-            $hasMatch = preg_match(
-                $this->buildMatchingTag(preg_quote($name), '/#^'),
-                $templateScope,
-                $match,
-                PREG_OFFSET_CAPTURE,
-                $position - $start
-            );
-            if ($hasMatch) {
-                $tagLength = strlen($match[0][0]);
-                $tagEnd = $match[0][1] + $tagLength;
-                $tagType = $match[3][0];
-                switch($tagType){
-                    case self::TYPE_INVERT:
-                    case self::TYPE_OPEN:
-                        ++$nest;
-                        $position = $start + $tagEnd;
-                        break;
-                    case self::TYPE_CLOSE:
-                        if ($nest == 0) {
-                            $position = $start + $match[2][1];
-                            return $tagLength - strlen($match[1][0]);
-                        } elseif ($nest > 0) {
-                            $position = $start + $tagEnd;
-                            --$nest;
-                        }
-                        break;
-                    default:
-                        $position = $start + $tagEnd;
-                        break;
-                }
-            } else {
-                $position = $end;
-                break;
-            }
-        }
-    }
-
-    /**
      * Set the template to be rendered by Mustache
      * @param string $template The template to render
      * @return Mustache Returns self for chaining
@@ -443,18 +267,9 @@ class Mustache
     public function render($scope = array())
     {
         $this->loadParameters();
-        $buffer = $this->parse($scope, 0, strlen($this->template));
+        $tokenizer = new Tokenizer();
+        $tokens = $tokenizer->parse($this->template);
+        $buffer = $this->parse($scope, $tokens);
         return $buffer;
-    }
-
-    /**
-     * Build the tag matching regular expression
-     * @param string $name (optional) The tag name to match
-     * @return string Returns the final regular expression
-     * @since 1.0-sofia
-     */
-    private function buildMatchingTag($name = '(.+?)', $type = '^&#={!><')
-    {
-        return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), preg_quote($type), $name, preg_quote($this->closeDelimiter));
     }
 }
