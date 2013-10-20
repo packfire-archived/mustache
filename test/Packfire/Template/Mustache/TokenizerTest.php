@@ -90,4 +90,19 @@ class TokenizerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('text', $tokens[1][Tokenizer::TOKEN_NODES][0][Tokenizer::TOKEN_VALUE]);
         $this->assertEquals(Tokenizer::TOKEN_TYPE_TEXT, $tokens[1][Tokenizer::TOKEN_NODES][0][Tokenizer::TOKEN_TYPE]);
     }
+
+    public function testChangeTagDelimiters()
+    {
+        $tokenizer = new Tokenizer();
+        $tokens = $tokenizer->parse("testing\n{{=| |=}}{{|bool|}}");
+        $this->assertCount(6, $tokens);
+        $this->assertEquals('| |', $tokens[2][Tokenizer::TOKEN_NAME]);
+        $this->assertEquals(Tokenizer::TOKEN_TYPE_TAG, $tokens[2][Tokenizer::TOKEN_TYPE]);
+        $this->assertEquals(Tokenizer::TYPE_CHANGETAG, $tokens[2][Tokenizer::TOKEN_TAG_TYPE]);
+        $this->assertEquals('{{', $tokens[3][Tokenizer::TOKEN_VALUE]);
+        $this->assertEquals('}}', $tokens[5][Tokenizer::TOKEN_VALUE]);
+        $this->assertEquals('bool', $tokens[4][Tokenizer::TOKEN_NAME]);
+        $this->assertEquals(Tokenizer::TOKEN_TYPE_TAG, $tokens[4][Tokenizer::TOKEN_TYPE]);
+        $this->assertEquals(Tokenizer::TYPE_NORMAL, $tokens[4][Tokenizer::TOKEN_TAG_TYPE]);
+    }
 }
