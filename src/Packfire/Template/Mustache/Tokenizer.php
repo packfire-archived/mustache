@@ -58,15 +58,9 @@ class Tokenizer
      */
     protected $line = array();
 
-    /**
-     * The tokens result
-     * @var array
-     * @since 1.2.0
-     */
-    protected $tokens = array();
-
     public function parse($text)
     {
+        $tokens = array();
         $textLength = strlen($text);
         $position = 0;
         $this->line = 1;
@@ -95,18 +89,18 @@ class Tokenizer
 
                 $subText = substr($text, $position, $tagStart - $position);
                 if (strlen($subText)) {
-                    $this->tokens[] = array(
+                    $tokens[] = array(
                         self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
                         self::TOKEN_LINE => $this->line,
                         self::TOKEN_VALUE => $subText
                     );
                 }
 
-                $this->tokens[] = $this->buildTagToken($match, $position);
+                $tokens[] = $this->buildTagToken($match, $position);
 
                 $subText = substr($text, $tagEnd, $newlinePosition - $tagEnd);
                 if (strlen($subText)) {
-                    $this->tokens[] = array(
+                    $tokens[] = array(
                         self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
                         self::TOKEN_LINE => $this->line,
                         self::TOKEN_VALUE => $subText
@@ -115,7 +109,7 @@ class Tokenizer
             } else {
                 $subText = substr($text, $position, $newlinePosition - $position);
                 if (strlen($subText)) {
-                    $this->tokens[] = array(
+                    $tokens[] = array(
                         self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
                         self::TOKEN_LINE => $this->line,
                         self::TOKEN_VALUE => $subText
@@ -124,7 +118,7 @@ class Tokenizer
             }
             $position = $newlinePosition;
             if (substr($text, $position, 1) === "\n") {
-                $this->tokens[] = array(
+                $tokens[] = array(
                     self::TOKEN_TYPE => self::TOKEN_TYPE_NEWLINE,
                     self::TOKEN_VALUE => "\n"
                 );
@@ -132,7 +126,7 @@ class Tokenizer
                 ++$position;
             }
         }
-        return $this->tokens;
+        return $tokens;
     }
 
     protected function buildTagToken($match, $position)
