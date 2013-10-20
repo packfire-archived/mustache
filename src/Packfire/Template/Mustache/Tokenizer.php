@@ -10,7 +10,7 @@ class Tokenizer
      */
     const TAG_REGEX = '`%s([%s]{0,1})(%s)%s`is';
 
-    const TYPE_NORMAL = '';
+    const TYPE_NORMAL = '!ev';
     const TYPE_OPEN = '#';
     const TYPE_CLOSE = '/';
     const TYPE_UNESCAPE = '&';
@@ -52,7 +52,7 @@ class Tokenizer
      * @var integer
      * @since 1.2.0
      */
-    protected $line = array();
+    protected $line = 1;
 
     public function parse($text)
     {
@@ -117,6 +117,7 @@ class Tokenizer
             }
         }
         $tokens = $this->processTokens($tokens);
+        $this->reset();
         return $tokens;
     }
 
@@ -125,6 +126,14 @@ class Tokenizer
         $this->openDelimiter = $open;
         $this->closeDelimiter = $close;
     }
+
+    public function reset()
+    {
+        $this->openDelimiter = '{{';
+        $this->closeDelimiter = '}}';
+        $this->line = 1;
+    }
+
     protected function processTokens($tokens, $startIndex = 0, $closingTag = null)
     {
         $result = array();
@@ -155,8 +164,12 @@ class Tokenizer
             }
             list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
         }
+        $type = $match[1][0];
+        if (!$type) {
+            $type = self::TYPE_NORMAL;
+        }
         return array(
-            self::TOKEN_TYPE => $match[1][0],
+            self::TOKEN_TYPE => $type,
             self::TOKEN_NAME => $name,
             self::TOKEN_LINE => $this->line,
             self::TOKEN_OPEN_DELIMITER => $openDelimiter,
