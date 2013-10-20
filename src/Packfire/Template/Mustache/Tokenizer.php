@@ -70,51 +70,45 @@ class Tokenizer
             if ($newlinePosition === false) {
                 $newlinePosition = $textLength;
             }
-            $hasTagMatch = preg_match(
-                $this->buildMatchingTag(),
-                substr($text, 0, $newlinePosition),
-                $match,
-                PREG_OFFSET_CAPTURE,
-                $position
-            );
-            if ($hasTagMatch) {
-                // there's a tag in between
-                $tagLength = strlen($match[0][0]);
-                $tagStart = $match[0][1];
-                $tagEnd = $tagStart + $tagLength;
-                if ($match[1][0] == self::TYPE_UNESCAPETRIPLE) {
-                    $tagLength += 1;
-                    $tagEnd += 1;
-                }
+            do {
+                $hasTagMatch = preg_match(
+                    $this->buildMatchingTag(),
+                    substr($text, 0, $newlinePosition),
+                    $match,
+                    PREG_OFFSET_CAPTURE,
+                    $position
+                );
+                if ($hasTagMatch) {
+                    // there's a tag in between
+                    $tagLength = strlen($match[0][0]);
+                    $tagStart = $match[0][1];
+                    $tagEnd = $tagStart + $tagLength;
+                    if ($match[1][0] == self::TYPE_UNESCAPETRIPLE) {
+                        $tagLength += 1;
+                        $tagEnd += 1;
+                    }
 
-                $subText = substr($text, $position, $tagStart - $position);
-                if (strlen($subText)) {
-                    $tokens[] = array(
-                        self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
-                        self::TOKEN_LINE => $this->line,
-                        self::TOKEN_VALUE => $subText
-                    );
-                }
+                    $subText = substr($text, $position, $tagStart - $position);
+                    if (strlen($subText)) {
+                        $tokens[] = array(
+                            self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
+                            self::TOKEN_LINE => $this->line,
+                            self::TOKEN_VALUE => $subText
+                        );
+                    }
 
-                $tokens[] = $this->buildTagToken($match, $position);
+                    $tokens[] = $this->buildTagToken($match, $position);
+                    $position = $tagEnd;
+                }
+            } while ($hasTagMatch);
 
-                $subText = substr($text, $tagEnd, $newlinePosition - $tagEnd);
-                if (strlen($subText)) {
-                    $tokens[] = array(
-                        self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
-                        self::TOKEN_LINE => $this->line,
-                        self::TOKEN_VALUE => $subText
-                    );
-                }
-            } else {
-                $subText = substr($text, $position, $newlinePosition - $position);
-                if (strlen($subText)) {
-                    $tokens[] = array(
-                        self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
-                        self::TOKEN_LINE => $this->line,
-                        self::TOKEN_VALUE => $subText
-                    );
-                }
+            $subText = substr($text, $position, $newlinePosition - $position);
+            if (strlen($subText)) {
+                $tokens[] = array(
+                    self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
+                    self::TOKEN_LINE => $this->line,
+                    self::TOKEN_VALUE => $subText
+                );
             }
             $position = $newlinePosition;
             if (substr($text, $position, 1) === "\n") {
@@ -169,7 +163,7 @@ class Tokenizer
      * @return string Returns the final regular expression
      * @since 1.2.0
      */
-    private function buildMatchingTag($name = '.+?', $type = '^&#={!><')
+    private function buildMatchingTag($name = '.+?', $type = '^/&#={!><')
     {
         return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), preg_quote($type), $name, preg_quote($this->closeDelimiter));
     }
