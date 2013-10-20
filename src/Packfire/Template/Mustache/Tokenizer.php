@@ -120,6 +120,11 @@ class Tokenizer
         return $tokens;
     }
 
+    public function changeDelimiters($open, $close)
+    {
+        $this->openDelimiter = $open;
+        $this->closeDelimiter = $close;
+    }
     protected function processTokens($tokens, $startIndex = 0, $closingTag = null)
     {
         $result = array();

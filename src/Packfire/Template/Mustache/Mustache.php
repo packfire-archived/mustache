@@ -51,6 +51,20 @@ class Mustache
     protected $escaper = array(__CLASS__, 'escape');
 
     /**
+     * The opening delimiter
+     * @var string
+     * @since 1.0.1
+     */
+    protected $openDelimiter = '{{';
+
+    /**
+     * The closing delimiter
+     * @var string
+     * @since 1.0.1
+     */
+    protected $closeDelimiter = '}}';
+
+    /**
      * Create a new Mustache object
      * @param string $template (optional) Set the template to render
      * @param array $options (optional) Set a variety of options
@@ -247,6 +261,7 @@ class Mustache
     {
         $this->loadParameters();
         $tokenizer = new Tokenizer();
+        $tokenizer->changeDelimiters($this->openDelimiter, $this->closeDelimiter);
         $tokens = $tokenizer->parse($this->template);
         $buffer = $this->parse($scope, $tokens);
         return $buffer;
