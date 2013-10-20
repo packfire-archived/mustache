@@ -147,13 +147,22 @@ class Tokenizer
 
     protected function buildTagToken($match, $position)
     {
+        $name = $match[2][0];
+        $openDelimiter = $this->openDelimiter;
+        $closeDelimiter = $this->closeDelimiter;
+        if ($match[1][0] == self::TYPE_CHANGETAG) {
+            if (substr($name, -1) == '=') {
+                $name = substr($name, 0, strlen($name) - 1);
+            }
+            list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
+        }
         return array(
             self::TOKEN_TYPE => self::TOKEN_TYPE_TAG,
             self::TOKEN_TAG_TYPE => $match[1][0],
-            self::TOKEN_NAME => $match[2][0],
+            self::TOKEN_NAME => $name,
             self::TOKEN_LINE => $this->line,
-            self::TOKEN_OPEN_DELIMITER => $this->openDelimiter,
-            self::TOKEN_CLOSE_DELIMITER => $this->closeDelimiter
+            self::TOKEN_OPEN_DELIMITER => $openDelimiter,
+            self::TOKEN_CLOSE_DELIMITER => $closeDelimiter
         );
     }
 
