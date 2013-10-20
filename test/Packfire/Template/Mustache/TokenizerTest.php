@@ -86,5 +86,8 @@ class TokenizerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('bool', $tokens[1][Tokenizer::TOKEN_NAME]);
         $this->assertEquals(Tokenizer::TOKEN_TYPE_TAG, $tokens[1][Tokenizer::TOKEN_TYPE]);
         $this->assertEquals(Tokenizer::TYPE_OPEN, $tokens[1][Tokenizer::TOKEN_TAG_TYPE]);
+        $this->assertCount(1, $tokens[1][Tokenizer::TOKEN_NODES]);
+        $this->assertEquals('text', $tokens[1][Tokenizer::TOKEN_NODES][0][Tokenizer::TOKEN_VALUE]);
+        $this->assertEquals(Tokenizer::TOKEN_TYPE_TEXT, $tokens[1][Tokenizer::TOKEN_NODES][0][Tokenizer::TOKEN_TYPE]);
     }
 }
