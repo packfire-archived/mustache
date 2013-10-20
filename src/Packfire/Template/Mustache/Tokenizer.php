@@ -126,7 +126,29 @@ class Tokenizer
                 ++$position;
             }
         }
+        $tokens = $this->processTokens($tokens);
         return $tokens;
+    }
+
+    protected function processTokens($tokens, $startIndex = 0, $closingTag = null)
+    {
+        $result = array();
+        $count = count($tokens);
+        for ($i = $startIndex; $i < $count; ++$i) {
+            $token = $tokens[$i];
+            if ($token[self::TOKEN_TYPE] == self::TOKEN_TYPE_TAG) {
+                if ($token[self::TOKEN_TAG_TYPE] == self::TYPE_OPEN
+                    || $token[self::TOKEN_TAG_TYPE] == self::TYPE_INVERT) {
+                    $nodes = $this->processTokens($tokens, $i + 1, $token[self::TOKEN_NAME]);
+                    $token[self::TOKEN_NODES] = $nodes;
+                    $i += count($nodes) + 1;
+                } elseif ($closingTag && $token[self::TOKEN_TAG_TYPE] == self::TYPE_CLOSE) {
+                    break;
+                }
+            }
+            array_push($result, $token);
+        }
+        return $result;
     }
 
     protected function buildTagToken($match, $position)
