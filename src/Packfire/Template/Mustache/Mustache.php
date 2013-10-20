@@ -436,13 +436,14 @@ class Mustache
 
     /**
      * Render the Mustache template
+     * @param array $scope (optional) The scope to start working from on the parameters.
      * @return string Returns the parsed template
      * @since 1.0-sofia
      */
-    public function render()
+    public function render($scope = array())
     {
         $this->loadParameters();
-        $buffer = $this->parse(array(), 0, strlen($this->template));
+        $buffer = $this->parse($scope, 0, strlen($this->template));
         return $buffer;
     }
 
