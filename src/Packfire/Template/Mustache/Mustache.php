@@ -142,27 +142,6 @@ class Mustache
     }
 
     /**
-     * Add a property to the buffer and determine if it should be escaped
-     * @param string $buffer The output buffer
-     * @param mixed $property The data to add into the buffer
-     * @param mixed $name The name of the property
-     * @param boolean $escape (optional) Set whether to escape the property.
-     *                 Set this to true for escaping, and false otherwise.
-     *                 Defaults to true.
-     * @since 1.0-sofia
-     */
-    private function addToBuffer(&$buffer, $property, $name, $escape = true)
-    {
-        if (is_array($property)) {
-            $property = implode('', $property);
-        }
-        if ($escape) {
-            $property = call_user_func($this->escaper, $property);
-        }
-        $buffer .= $property;
-    }
-
-    /**
      * Set the partial loader for the Mustache engine
      * @param Packfire\Template\Mustache\LoaderInterface $loader The loader for partials
      * @return Mustache Returns self for chaining
