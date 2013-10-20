@@ -20,15 +20,11 @@ class Tokenizer
     const TYPE_PARTIAL1 = '>';
     const TYPE_PARTIAL2 = '<';
     const TYPE_CHANGETAG = '=';
-
-    const TOKEN_TYPE_TEXT = 1;
-    const TOKEN_TYPE_TAG = 2;
-    const TOKEN_TYPE_SECTION = 3;
-    const TOKEN_TYPE_NEWLINE = 4;
+    const TYPE_TEXT = '!t';
+    const TYPE_LINE = '!l';
 
     const TOKEN_TYPE = 'type';
     const TOKEN_NAME = 'name';
-    const TOKEN_TAG_TYPE = 'tagType';
     const TOKEN_OPEN_DELIMITER = 'open';
     const TOKEN_CLOSE_DELIMITER = 'close';
     const TOKEN_POSITION = 'position';
@@ -91,7 +87,7 @@ class Tokenizer
                     $subText = substr($text, $position, $tagStart - $position);
                     if (strlen($subText)) {
                         $tokens[] = array(
-                            self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
+                            self::TOKEN_TYPE => self::TYPE_TEXT,
                             self::TOKEN_LINE => $this->line,
                             self::TOKEN_VALUE => $subText
                         );
@@ -105,7 +101,7 @@ class Tokenizer
             $subText = substr($text, $position, $newlinePosition - $position);
             if (strlen($subText)) {
                 $tokens[] = array(
-                    self::TOKEN_TYPE => self::TOKEN_TYPE_TEXT,
+                    self::TOKEN_TYPE => self::TYPE_TEXT,
                     self::TOKEN_LINE => $this->line,
                     self::TOKEN_VALUE => $subText
                 );
@@ -113,7 +109,7 @@ class Tokenizer
             $position = $newlinePosition;
             if (substr($text, $position, 1) === "\n") {
                 $tokens[] = array(
-                    self::TOKEN_TYPE => self::TOKEN_TYPE_NEWLINE,
+                    self::TOKEN_TYPE => self::TYPE_LINE,
                     self::TOKEN_VALUE => "\n"
                 );
                 ++$this->line;
@@ -130,15 +126,13 @@ class Tokenizer
         $count = count($tokens);
         for ($i = $startIndex; $i < $count; ++$i) {
             $token = $tokens[$i];
-            if ($token[self::TOKEN_TYPE] == self::TOKEN_TYPE_TAG) {
-                if ($token[self::TOKEN_TAG_TYPE] == self::TYPE_OPEN
-                    || $token[self::TOKEN_TAG_TYPE] == self::TYPE_INVERT) {
-                    $nodes = $this->processTokens($tokens, $i + 1, $token[self::TOKEN_NAME]);
-                    $token[self::TOKEN_NODES] = $nodes;
-                    $i += count($nodes) + 1;
-                } elseif ($closingTag && $token[self::TOKEN_TAG_TYPE] == self::TYPE_CLOSE) {
-                    break;
-                }
+            if ($token[self::TOKEN_TYPE] == self::TYPE_OPEN
+                || $token[self::TOKEN_TYPE] == self::TYPE_INVERT) {
+                $nodes = $this->processTokens($tokens, $i + 1, $token[self::TOKEN_NAME]);
+                $token[self::TOKEN_NODES] = $nodes;
+                $i += count($nodes) + 1;
+            } elseif ($closingTag && $token[self::TOKEN_TYPE] == self::TYPE_CLOSE) {
+                break;
             }
             array_push($result, $token);
         }
@@ -157,8 +151,7 @@ class Tokenizer
             list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
         }
         return array(
-            self::TOKEN_TYPE => self::TOKEN_TYPE_TAG,
-            self::TOKEN_TAG_TYPE => $match[1][0],
+            self::TOKEN_TYPE => $match[1][0],
             self::TOKEN_NAME => $name,
             self::TOKEN_LINE => $this->line,
             self::TOKEN_OPEN_DELIMITER => $openDelimiter,
