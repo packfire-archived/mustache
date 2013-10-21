@@ -119,12 +119,12 @@ class Mustache
 
     /**
      * Perform parsing of a scope
-     * @param mixed $scope The parameter scope to work with
+     * @param array $scope The parameter scope to work with
      * @param array $tokens The array of tokens to parse
      * @return string Returns the parsed text
      * @since 1.2.0
      */
-    private function parse($scope, $tokens)
+    private function parse(array $scope, array $tokens)
     {
         $buffer = '';
         while (($token = current($tokens)) !== false) {
