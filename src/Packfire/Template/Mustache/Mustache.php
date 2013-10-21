@@ -265,14 +265,19 @@ class Mustache
 
     /**
      * Check if the scope is an array of objects
-     * @param mixed $scope The scope to be checked
-     * @return boolean Returns true if the scope is an array of objects,
+     * @param mixed $value The value to be checked
+     * @return boolean Returns true if the value is an array of objects,
      *                  false otherwise.
      * @since 1.0-sofia
      */
-    private function isArrayOfObjects($scope)
+    private function isArrayOfObjects($value)
     {
-        return is_array($scope) && count($scope) > 0 && array_keys($scope) === range(0, count($scope) - 1) && !is_scalar($scope[0]);
+        if (is_object($value)) {
+            return $value instanceof \Traversable;
+        } elseif (is_array($value)) {
+            return !is_scalar($value[0]) && array_keys($value) === range(0, count($value) - 1);
+        }
+        return false;
     }
 
     /**
