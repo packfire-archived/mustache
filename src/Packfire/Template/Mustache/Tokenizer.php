@@ -110,6 +110,7 @@ class Tokenizer
             if (substr($text, $position, 1) === "\n") {
                 $tokens[] = array(
                     self::TOKEN_TYPE => self::TYPE_LINE,
+                    self::TOKEN_LINE => $this->line,
                     self::TOKEN_VALUE => "\n"
                 );
                 ++$this->line;
