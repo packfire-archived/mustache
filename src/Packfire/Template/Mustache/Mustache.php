@@ -275,7 +275,7 @@ class Mustache
         if (is_object($value)) {
             return $value instanceof \Traversable;
         } elseif (is_array($value)) {
-            return !is_scalar($value[0]) && array_keys($value) === range(0, count($value) - 1);
+            return array_keys($value) === range(0, count($value) - 1);
         }
         return false;
     }
