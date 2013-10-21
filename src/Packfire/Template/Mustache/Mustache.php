@@ -113,7 +113,7 @@ class Mustache
     private function parse($scope, $tokens)
     {
         $buffer = '';
-        foreach ($tokens as $token) {
+        while (($token = current($tokens)) !== false) {
             switch ($token[Tokenizer::TOKEN_TYPE]) {
                 case Tokenizer::TYPE_OPEN:
                     $name = $token[Tokenizer::TOKEN_NAME];
@@ -175,6 +175,7 @@ class Mustache
                     $buffer .= $this->partial($name, $scope);
                     break;
             }
+            next($tokens);
         }
         return $buffer;
     }
