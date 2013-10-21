@@ -65,6 +65,20 @@ class Mustache
     protected $closeDelimiter = '}}';
 
     /**
+     * The current processing line number
+     * @var string
+     * @since 1.2.0
+     */
+    protected $line = 0;
+
+    /**
+     * The current number of tokens on the line
+     * @var string
+     * @since 1.2.0
+     */
+    protected $lineToken = 0;
+
+    /**
      * Create a new Mustache object
      * @param string $template (optional) Set the template to render
      * @param array $options (optional) Set a variety of options
@@ -114,6 +128,9 @@ class Mustache
     {
         $buffer = '';
         while (($token = current($tokens)) !== false) {
+            if ($token[Tokenizer::TOKEN_LINE] === $this->line) {
+                ++$this->lineToken;
+            }
             switch ($token[Tokenizer::TOKEN_TYPE]) {
                 case Tokenizer::TYPE_OPEN:
                     $name = $token[Tokenizer::TOKEN_NAME];
@@ -167,6 +184,8 @@ class Mustache
                     $buffer .= $token[Tokenizer::TOKEN_VALUE];
                     break;
                 case Tokenizer::TYPE_LINE:
+                    ++$this->line;
+                    $this->lineToken == 0;
                     $buffer .= $token[Tokenizer::TOKEN_VALUE];
                     break;
                 case Tokenizer::TYPE_PARTIAL1:
@@ -330,6 +349,7 @@ class Mustache
         $tokenizer = new Tokenizer();
         $tokenizer->changeDelimiters($this->openDelimiter, $this->closeDelimiter);
         $tokens = $tokenizer->parse($this->template);
+        $this->line = 1;
         $buffer = $this->parse($scope, $tokens);
         return $buffer;
     }
