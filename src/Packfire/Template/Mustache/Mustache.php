@@ -120,8 +120,8 @@ class Mustache
                     $property = $this->scope(array_merge($scope, array($name)));
                     if ($property) {
                         if ($this->isArrayOfObjects($property)) {
-                            $path = array_merge($scope, array($name));
-                            foreach ($property as $item) {
+                            foreach ($property as $idx => $item) {
+                                $path = array_merge($scope, array($name, $idx));
                                 $buffer .= $this->parse($path, $token[Tokenizer::TOKEN_NODES]);
                             }
                         } else {
