@@ -170,7 +170,7 @@ class Tokenizer
         }
         return array(
             self::TOKEN_TYPE => $type,
-            self::TOKEN_NAME => $name,
+            self::TOKEN_NAME => trim($name),
             self::TOKEN_LINE => $this->line,
             self::TOKEN_OPEN_DELIMITER => $openDelimiter,
             self::TOKEN_CLOSE_DELIMITER => $closeDelimiter
