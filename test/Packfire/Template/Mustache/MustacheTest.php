@@ -222,6 +222,12 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Good day &lt;b&gt;name&lt;/b&gt;!', $this->object->parameters(array('name' => '<b>name</b>'))->render());
     }
 
+    public function testEscapeArrayTest()
+    {
+        $this->object->template('Good day {{ name }}!');
+        $this->assertEquals('Good day testtest!', $this->object->parameters(array('name' => array('test', 'test')))->render());
+    }
+
     public function testNoEscapeTest()
     {
         $this->object->template('Good day {{&name}}!');
