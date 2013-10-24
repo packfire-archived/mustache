@@ -22,38 +22,6 @@ namespace Packfire\Template\Mustache;
  */
 class Mustache
 {
-
-    /**
-     * The tag regular expression
-     * @since 1.0-sofia
-     */
-    const TAG_REGEX = '`(\s*)(%s([%s]{0,1})(%s)%s)(\s*)`is';
-
-    const TYPE_NORMAL = '';
-    const TYPE_OPEN = '#';
-    const TYPE_CLOSE = '/';
-    const TYPE_UNESCAPE = '&';
-    const TYPE_UNESCAPETRIPLE = '{';
-    const TYPE_INVERT = '^';
-    const TYPE_COMMENT = '!';
-    const TYPE_PARTIAL1 = '>';
-    const TYPE_PARTIAL2 = '<';
-    const TYPE_CHANGETAG = '=';
-
-    /**
-     * The opening delimiter
-     * @var string
-     * @since 1.0.1
-     */
-    protected $openDelimiter = '{{';
-
-    /**
-     * The closing delimiter
-     * @var string
-     * @since 1.0.1
-     */
-    protected $closeDelimiter = '}}';
-
     /**
      * The template to be parsed
      * @var string
@@ -81,6 +49,34 @@ class Mustache
      * @since 1.0-sofia
      */
     protected $escaper = array(__CLASS__, 'escape');
+
+    /**
+     * The opening delimiter
+     * @var string
+     * @since 1.0.1
+     */
+    protected $openDelimiter = '{{';
+
+    /**
+     * The closing delimiter
+     * @var string
+     * @since 1.0.1
+     */
+    protected $closeDelimiter = '}}';
+
+    /**
+     * The current processing line number
+     * @var string
+     * @since 1.2.0
+     */
+    protected $line = 0;
+
+    /**
+     * The current number of tokens on the line
+     * @var string
+     * @since 1.2.0
+     */
+    protected $lineToken = 0;
 
     /**
      * Create a new Mustache object
@@ -123,105 +119,82 @@ class Mustache
 
     /**
      * Perform parsing of a scope
-     * @param mixed $scope The parameter scope to work with
-     * @param integer $start The start position of the template string
-     *              to start working from
-     * @param integer $end The end position of the template string
-     *              to stop working at
+     * @param array $scope The parameter scope to work with
+     * @param array $tokens The array of tokens to parse
      * @return string Returns the parsed text
-     * @since 1.1.0
+     * @since 1.2.0
      */
-    private function parse($scopePath, $start, $end)
+    private function parse(array $scope, array $tokens)
     {
         $buffer = '';
-        $position = $start;
-        $templateScope = substr($this->template, $start, $end - $start);
-        while ($position < $end) {
-            $match = array();
-            $hasMatch = preg_match(
-                $this->buildMatchingTag(),
-                $templateScope,
-                $match,
-                PREG_OFFSET_CAPTURE,
-                $position - $start
-            );
-            if ($hasMatch) {
-                $tagLength = strlen($match[0][0]);
-                $tagStart = $match[0][1];
-                $tagEnd = $tagStart + $tagLength;
-                $name = trim($match[4][0]);
-                $tagType = $match[3][0];
-                $buffer .= substr($this->template, $position, $tagStart + $start - $position);
-                $isStandalone = substr(trim($match[1][0], " \t\r\0\x0B"), 0, 1) == "\n" && substr(trim($match[6][0], " \t\r\0\x0B"), 0, 1) == "\n";
-                if (!$isStandalone || !in_array($tagType, array(self::TYPE_CLOSE, self::TYPE_OPEN, self::TYPE_COMMENT, self::TYPE_CHANGETAG, self::TYPE_INVERT))) {
-                    $buffer .= $match[1][0];
-                }
-                switch($tagType){
-                    case self::TYPE_COMMENT:
-                    case self::TYPE_CLOSE:
-                        // comment, do nothing
-                        $position = $start + $tagEnd;
-                        break;
-                    case self::TYPE_OPEN:
-                        $position = $start + $tagEnd;
-                        $endTagLength = $this->findClosingTag($name, $position, $end);
-                        $property = $this->scope(array_merge($scopePath, array($name)));
-                        if ($this->isArrayOfObjects($property)) {
-                            $keys = array_keys($property);
-                            foreach ($keys as $key) {
-                                $buffer .= $this->parse(array_merge($scopePath, array($name, $key)), $start + $tagEnd, $position);
-                            }
-                        } elseif ($property) {
-                            $path = $scopePath;
-                            if (!is_scalar($property)) {
-                                $path = array_merge($scopePath, array($name));
-                            }
-                            $buffer .= $this->parse($path, $start + $tagEnd, $position);
-                        }
-                        $position += $endTagLength;
-                        break;
-                    case self::TYPE_INVERT:
-                        $position = $tagEnd;
-                        $endTagLength = $this->findClosingTag($name, $position, $end);
-                        $property = $this->scope(array_merge($scopePath, array($name)));
-                        if (!$property) {
-                            $buffer .= $this->parse($scopePath, $start + $tagEnd, $position);
-                        }
-                        $position += $endTagLength;
-                        break;
-                    case self::TYPE_PARTIAL1:
-                    case self::TYPE_PARTIAL2:
-                        $property = $this->scope(array_merge($scopePath, array($name)));
-                        $buffer .= $this->partial($name, $property);
-                        $position = $start + $tagEnd;
-                        break;
-                    case self::TYPE_CHANGETAG:
-                        if (substr($name, -1) == '=') {
-                            $name = substr($name, 0, strlen($name) - 1);
-                        }
-                        list($this->openDelimiter, $this->closeDelimiter) = explode(' ', $name);
-                        $position = $start + $tagEnd;
-                        break;
-                    case self::TYPE_UNESCAPETRIPLE:
-                        $tagEnd += 1;
-                        // continue with the unescaping
-                    case self::TYPE_UNESCAPE:
-                        $property = $this->scope(array_merge($scopePath, array($name)));
-                        $this->addToBuffer($buffer, $property, $name, false);
-                        $position = $start + $tagEnd;
-                        break;
-                    default:
-                        $property = $this->scope(array_merge($scopePath, array($name)));
-                        $this->addToBuffer($buffer, $property, $name);
-                        $position = $start + $tagEnd;
-                        break;
-                }
-                $buffer .= $match[6][0];
-            } else {
-                // no more found
-                $buffer .= substr($this->template, $position, $end - $position);
-                $position = $end;
+        while (($token = current($tokens)) !== false) {
+            if ($token[Tokenizer::TOKEN_LINE] === $this->line) {
+                ++$this->lineToken;
             }
+            switch ($token[Tokenizer::TOKEN_TYPE]) {
+                case Tokenizer::TYPE_OPEN:
+                    $name = $token[Tokenizer::TOKEN_NAME];
+                    $property = $this->scope(array_merge($scope, array($name)));
+                    if ($property) {
+                        if ($this->isArrayOfObjects($property)) {
+                            foreach ($property as $idx => $item) {
+                                $path = array_merge($scope, array($name, $idx));
+                                $buffer .= $this->parse($path, $token[Tokenizer::TOKEN_NODES]);
+                            }
+                        } else {
+                            $path = $scope;
+                            if (!is_scalar($property)) {
+                                $path = array_merge($scope, array($name));
+                            }
+                            $buffer .= $this->parse($path, $token[Tokenizer::TOKEN_NODES]);
+                        }
+                    }
+                    break;
+                case Tokenizer::TYPE_INVERT:
+                    $name = $token[Tokenizer::TOKEN_NAME];
+                    $property = $this->scope(array_merge($scope, array($name)));
+                    if (!$property) {
+                        $buffer .= $this->parse($scope, $token[Tokenizer::TOKEN_NODES]);
+                    }
+                    break;
+                case Tokenizer::TYPE_CLOSE:
+                    break;
+                case Tokenizer::TYPE_NORMAL:
+                    $name = $token[Tokenizer::TOKEN_NAME];
+                    $property = $this->scope(array_merge($scope, array($name)));
+                    if ($property) {
+                        if (is_array($property)) {
+                            $property = implode('', $property);
+                        }
+                        $buffer .= call_user_func($this->escaper, $property);
+                    }
+                    break;
+                case Tokenizer::TYPE_UNESCAPETRIPLE:
+                case Tokenizer::TYPE_UNESCAPE:
+                    $name = $token[Tokenizer::TOKEN_NAME];
+                    $property = $this->scope(array_merge($scope, array($name)));
+                    if ($property) {
+                        if (is_array($property)) {
+                            $property = implode('', $property);
+                        }
+                        $buffer .= $property;
+                    }
+                    break;
+                case Tokenizer::TYPE_TEXT:
+                    $buffer .= $token[Tokenizer::TOKEN_VALUE];
+                    break;
+                case Tokenizer::TYPE_LINE:
+                    ++$this->line;
+                    $this->lineToken == 0;
+                    $buffer .= $token[Tokenizer::TOKEN_VALUE];
+                    break;
+                case Tokenizer::TYPE_PARTIAL1:
+                case Tokenizer::TYPE_PARTIAL2:
+                    $name = $token[Tokenizer::TOKEN_NAME];
+                    $buffer .= $this->partial($name, $scope);
+                    break;
+            }
+            next($tokens);
         }
         return $buffer;
     }
@@ -261,27 +234,6 @@ class Mustache
             $result = array_merge($result, $items);
         }
         return $result;
-    }
-
-    /**
-     * Add a property to the buffer and determine if it should be escaped
-     * @param string $buffer The output buffer
-     * @param mixed $property The data to add into the buffer
-     * @param mixed $name The name of the property
-     * @param boolean $escape (optional) Set whether to escape the property.
-     *                 Set this to true for escaping, and false otherwise.
-     *                 Defaults to true.
-     * @since 1.0-sofia
-     */
-    private function addToBuffer(&$buffer, $property, $name, $escape = true)
-    {
-        if (is_array($property)) {
-            $property = implode('', $property);
-        }
-        if ($escape) {
-            $property = call_user_func($this->escaper, $property);
-        }
-        $buffer .= $property;
     }
 
     /**
@@ -332,66 +284,19 @@ class Mustache
 
     /**
      * Check if the scope is an array of objects
-     * @param mixed $scope The scope to be checked
-     * @return boolean Returns true if the scope is an array of objects,
+     * @param mixed $value The value to be checked
+     * @return boolean Returns true if the value is an array of objects,
      *                  false otherwise.
      * @since 1.0-sofia
      */
-    private function isArrayOfObjects($scope)
+    private function isArrayOfObjects($value)
     {
-        return is_array($scope) && count($scope) > 0 && array_keys($scope) === range(0, count($scope) - 1) && !is_scalar($scope[0]);
-    }
-
-    /**
-     * Find the closing tag and shift the position variable to the front
-     * of the closing tag.
-     * @param string $name The name of the closing tag to find
-     * @param string $position The position to be set to
-     * @param string $end The end of the tempalte scope
-     * @since 1.0-sofia
-     */
-    private function findClosingTag($name, &$position, $end)
-    {
-        $nest = 0;
-        $templateScope = substr($this->template, $position, $end - $position);
-        $start = $position;
-        while ($position < $end) {
-            $match = array();
-            $hasMatch = preg_match(
-                $this->buildMatchingTag(preg_quote($name), '/#^'),
-                $templateScope,
-                $match,
-                PREG_OFFSET_CAPTURE,
-                $position - $start
-            );
-            if ($hasMatch) {
-                $tagLength = strlen($match[0][0]);
-                $tagEnd = $match[0][1] + $tagLength;
-                $tagType = $match[3][0];
-                switch($tagType){
-                    case self::TYPE_INVERT:
-                    case self::TYPE_OPEN:
-                        ++$nest;
-                        $position = $start + $tagEnd;
-                        break;
-                    case self::TYPE_CLOSE:
-                        if ($nest == 0) {
-                            $position = $start + $match[2][1];
-                            return $tagLength - strlen($match[1][0]);
-                        } elseif ($nest > 0) {
-                            $position = $start + $tagEnd;
-                            --$nest;
-                        }
-                        break;
-                    default:
-                        $position = $start + $tagEnd;
-                        break;
-                }
-            } else {
-                $position = $end;
-                break;
-            }
+        if (is_object($value)) {
+            return $value instanceof \Traversable;
+        } elseif (is_array($value)) {
+            return array_keys($value) === range(0, count($value) - 1);
         }
+        return false;
     }
 
     /**
@@ -434,24 +339,18 @@ class Mustache
 
     /**
      * Render the Mustache template
+     * @param array $scope (optional) The scope to start working from on the parameters.
      * @return string Returns the parsed template
      * @since 1.0-sofia
      */
-    public function render()
+    public function render($scope = array())
     {
         $this->loadParameters();
-        $buffer = $this->parse(array(), 0, strlen($this->template));
+        $tokenizer = new Tokenizer();
+        $tokenizer->changeDelimiters($this->openDelimiter, $this->closeDelimiter);
+        $tokens = $tokenizer->parse($this->template);
+        $this->line = 1;
+        $buffer = $this->parse($scope, $tokens);
         return $buffer;
-    }
-
-    /**
-     * Build the tag matching regular expression
-     * @param string $name (optional) The tag name to match
-     * @return string Returns the final regular expression
-     * @since 1.0-sofia
-     */
-    private function buildMatchingTag($name = '(.+?)', $type = '^&#={!><')
-    {
-        return sprintf(self::TAG_REGEX, preg_quote($this->openDelimiter), preg_quote($type), $name, preg_quote($this->closeDelimiter));
     }
 }

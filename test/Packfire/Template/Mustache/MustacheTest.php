@@ -195,9 +195,9 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
     public function testSwitchImmediate()
     {
         $mustache = new Mustache();
-        $mustache->template("Testing is {{#bool}}awesome{{/bool}}{{^bool}}bad{{/bool}}.");
+        $mustache->template("Testing is\n{{#bool}}awesome{{/bool}}{{^bool}}bad{{/bool}}.");
         $output = $mustache->render();
-        $this->assertEquals("Testing is bad.", $output);
+        $this->assertEquals("Testing is\nbad.", $output);
     }
 
     public function testDelimiterChange()
@@ -216,34 +216,16 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Jump over the moon !', $output);
     }
 
-    public function testStandalone()
-    {
-        $mustache = new Mustache();
-        $mustache->template("Testing\n   {{! some comment}}\nTesting");
-        $output = $mustache->render();
-        $this->assertEquals("Testing\nTesting", $output);
-    }
-
-    public function testStandalone2()
-    {
-        $mustache = new Mustache();
-        $mustache->template("Testing\n{{#test}}\nTesting\n{{/test}}\nTesting");
-        $output = $mustache->render();
-        $this->assertEquals("Testing\nTesting", $output);
-    }
-
-    public function testStandalone3()
-    {
-        $mustache = new Mustache();
-        $mustache->template("Testing\n{{test}}\nTesting");
-        $output = $mustache->render();
-        $this->assertEquals("Testing\n\nTesting", $output);
-    }
-
     public function testEscapeTest()
     {
         $this->object->template('Good day {{ name }}!');
         $this->assertEquals('Good day &lt;b&gt;name&lt;/b&gt;!', $this->object->parameters(array('name' => '<b>name</b>'))->render());
+    }
+
+    public function testEscapeArrayTest()
+    {
+        $this->object->template('Good day {{ name }}!');
+        $this->assertEquals('Good day testtest!', $this->object->parameters(array('name' => array('test', 'test')))->render());
     }
 
     public function testNoEscapeTest()
