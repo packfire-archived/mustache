@@ -195,9 +195,9 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
     public function testSwitchImmediate()
     {
         $mustache = new Mustache();
-        $mustache->template("Testing is {{#bool}}awesome{{/bool}}{{^bool}}bad{{/bool}}.");
+        $mustache->template("Testing is\n{{#bool}}awesome{{/bool}}{{^bool}}bad{{/bool}}.");
         $output = $mustache->render();
-        $this->assertEquals("Testing is bad.", $output);
+        $this->assertEquals("Testing is\nbad.", $output);
     }
 
     public function testDelimiterChange()
