@@ -146,10 +146,12 @@ class Tokenizer
                 ++$index;
                 $nodes = $this->processTokens($tokens, $index, $token[self::TOKEN_NAME]);
                 $token[self::TOKEN_NODES] = $nodes;
+                $result[] = $token;
             } elseif ($closingTag && $token[self::TOKEN_TYPE] == self::TYPE_CLOSE && $token[self::TOKEN_NAME] == $closingTag) {
                 break;
+            } else {
+                $result[] = $token;
             }
-            array_push($result, $token);
         }
         return $result;
     }
