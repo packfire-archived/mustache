@@ -101,4 +101,13 @@ class TokenizerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('bool', $tokens[4][Tokenizer::TOKEN_NAME]);
         $this->assertEquals(Tokenizer::TYPE_NORMAL, $tokens[4][Tokenizer::TOKEN_TYPE]);
     }
+
+    public function testNestedTags()
+    {
+        $tokenizer = new Tokenizer();
+        $tokens = $tokenizer->parse("{{#name}}My name is {{name}}!{{/name}}{{^name}}No name.{{/name}}");
+        $this->assertCount(2, $tokens);
+        $this->assertCount(3, $tokens[0][Tokenizer::TOKEN_NODES]);
+        $this->assertCount(1, $tokens[1][Tokenizer::TOKEN_NODES]);
+    }
 }
