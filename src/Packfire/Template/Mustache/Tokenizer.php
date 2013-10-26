@@ -135,21 +135,23 @@ class Tokenizer
         $this->line = 1;
     }
 
-    protected function processTokens($tokens, $startIndex = 0, $closingTag = null)
+    protected function processTokens($tokens, &$index = 0, $closingTag = null)
     {
         $result = array();
         $count = count($tokens);
-        for ($i = $startIndex; $i < $count; ++$i) {
-            $token = $tokens[$i];
+        for (; $index < $count; ++$index) {
+            $token = $tokens[$index];
             if ($token[self::TOKEN_TYPE] == self::TYPE_OPEN
                 || $token[self::TOKEN_TYPE] == self::TYPE_INVERT) {
-                $nodes = $this->processTokens($tokens, $i + 1, $token[self::TOKEN_NAME]);
+                ++$index;
+                $nodes = $this->processTokens($tokens, $index, $token[self::TOKEN_NAME]);
                 $token[self::TOKEN_NODES] = $nodes;
-                $i += count($nodes) + 1;
-            } elseif ($closingTag && $token[self::TOKEN_TYPE] == self::TYPE_CLOSE) {
+                $result[] = $token;
+            } elseif ($closingTag && $token[self::TOKEN_TYPE] == self::TYPE_CLOSE && $token[self::TOKEN_NAME] == $closingTag) {
                 break;
+            } else {
+                $result[] = $token;
             }
-            array_push($result, $token);
         }
         return $result;
     }
