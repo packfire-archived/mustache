@@ -143,28 +143,34 @@ class Tokenizer
             $token = $tokens[$index];
             if ($token[self::TOKEN_TYPE] == self::TYPE_OPEN
                 || $token[self::TOKEN_TYPE] == self::TYPE_INVERT) {
+                self::clearStandalone($result, $index, $tokens);
                 ++$index;
                 $nodes = $this->processTokens($tokens, $index, $token[self::TOKEN_NAME]);
                 $token[self::TOKEN_NODES] = $nodes;
                 $result[] = $token;
             } elseif ($closingTag && $token[self::TOKEN_TYPE] == self::TYPE_CLOSE && $token[self::TOKEN_NAME] == $closingTag) {
-                if ($index >= 1
-                        && $tokens[$index - 1][self::TOKEN_TYPE] == self::TYPE_LINE
-                        && $tokens[$index + 1][self::TOKEN_TYPE] == self::TYPE_LINE) {
-                    ++$index;
-                } elseif ($index >= 2
-                        && $tokens[$index - 2][self::TOKEN_TYPE] == self::TYPE_LINE
-                        && Mustache::isTokenWhitespace($tokens[$index - 1])
-                        && $tokens[$index + 1][self::TOKEN_TYPE] == self::TYPE_LINE) {
-                    array_pop($result);
-                    ++$index;
-                }
+                self::clearStandalone($result, $index, $tokens);
                 break;
             } else {
                 $result[] = $token;
             }
         }
         return $result;
+    }
+
+    protected static function clearStandalone(&$result, &$index, &$tokens)
+    {
+        if ($index >= 1
+                && $tokens[$index - 1][self::TOKEN_TYPE] == self::TYPE_LINE
+                && $tokens[$index + 1][self::TOKEN_TYPE] == self::TYPE_LINE) {
+            ++$index;
+        } elseif ($index >= 2
+                && $tokens[$index - 2][self::TOKEN_TYPE] == self::TYPE_LINE
+                && Mustache::isTokenWhitespace($tokens[$index - 1])
+                && $tokens[$index + 1][self::TOKEN_TYPE] == self::TYPE_LINE) {
+            array_pop($result);
+            ++$index;
+        }
     }
 
     protected function buildTagToken($match, $position)
