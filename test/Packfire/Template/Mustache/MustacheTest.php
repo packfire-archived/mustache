@@ -313,4 +313,12 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $output = $mustache->render();
         $this->assertEquals("Testing\n\nTesting", $output);
     }
+
+    public function testStandalone4()
+    {
+        $mustache = new Mustache();
+        $mustache->template("Testing\n    {{#test}}\n    Testing\n    {{/test}}\nTesting");
+        $output = $mustache->render();
+        $this->assertEquals("Testing\nTesting", $output);
+    }
 }
