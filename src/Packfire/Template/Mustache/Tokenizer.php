@@ -160,11 +160,11 @@ class Tokenizer
 
     protected static function clearStandalone(&$result, &$index, &$tokens)
     {
-        if ($index >= 1
+        if ($index >= 1 && $index < count($tokens) - 1
                 && $tokens[$index - 1][self::TOKEN_TYPE] == self::TYPE_LINE
                 && $tokens[$index + 1][self::TOKEN_TYPE] == self::TYPE_LINE) {
             ++$index;
-        } elseif ($index >= 2
+        } elseif ($index >= 2 && $index < count($tokens) - 1
                 && $tokens[$index - 2][self::TOKEN_TYPE] == self::TYPE_LINE
                 && Mustache::isTokenWhitespace($tokens[$index - 1])
                 && $tokens[$index + 1][self::TOKEN_TYPE] == self::TYPE_LINE) {
