@@ -156,6 +156,7 @@ class Tokenizer
                         && $tokens[$index - 2][self::TOKEN_TYPE] == self::TYPE_LINE
                         && Mustache::isTokenWhitespace($tokens[$index - 1])
                         && $tokens[$index + 1][self::TOKEN_TYPE] == self::TYPE_LINE) {
+                    array_pop($result);
                     ++$index;
                 }
                 break;
