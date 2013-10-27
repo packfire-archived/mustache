@@ -149,13 +149,13 @@ class Mustache
     {
         $buffer = '';
         if (count($tokens) == 2) {
-            if ($this->isTokenStandaloneClear($tokens[0])
+            if (self::isTokenStandaloneClear($tokens[0])
                     && $tokens[1][Tokenizer::TOKEN_TYPE] == Tokenizer::TYPE_LINE) {
                 array_pop($tokens);
             }
         } elseif (count($tokens) == 3) {
-            if ($this->isTokenWhitespace($tokens[0])
-                    && $this->isTokenStandaloneClear($tokens[1])
+            if (self::isTokenWhitespace($tokens[0])
+                    && self::isTokenStandaloneClear($tokens[1])
                     && $tokens[2][Tokenizer::TOKEN_TYPE] == Tokenizer::TYPE_LINE) {
                 array_shift($tokens);
                 array_pop($tokens);
@@ -225,7 +225,7 @@ class Mustache
         return $buffer;
     }
 
-    private function isTokenStandaloneClear(array $token)
+    public static function isTokenStandaloneClear(array $token)
     {
         $types = array(
             Tokenizer::TYPE_COMMENT,
@@ -240,7 +240,7 @@ class Mustache
         return in_array($token[Tokenizer::TOKEN_TYPE], $types);
     }
 
-    private function isTokenWhitespace(array $token)
+    public static function isTokenWhitespace(array $token)
     {
         if ($token[Tokenizer::TOKEN_TYPE] == Tokenizer::TYPE_TEXT) {
             return preg_match('/^\s*$/', $token[Tokenizer::TOKEN_VALUE]);
