@@ -130,11 +130,13 @@ class Mustache
         $line = array();
         foreach ($tokens as $token) {
             if ($token[Tokenizer::TOKEN_LINE] === $this->line) {
-                $line[] = $token;
                 ++$this->lineToken;
+                $line[] = $token;
             } else {
                 $buffer .= $this->processLine($scope, $line);
-                $line = array();
+                $line = array($token);
+                $this->lineToken = 1;
+                $this->line = $token[Tokenizer::TOKEN_LINE];
             }
         }
         if ($line) {
@@ -143,10 +145,23 @@ class Mustache
         return $buffer;
     }
 
-    private function processLine(array $scope, array $lineTokens)
+    private function processLine(array $scope, array $tokens)
     {
         $buffer = '';
-        foreach ($lineTokens as $token) {
+        if (count($tokens) == 2) {
+            if ($this->isTokenStandaloneClear($tokens[0])
+                    && $tokens[1][Tokenizer::TOKEN_TYPE] == Tokenizer::TYPE_LINE) {
+                array_pop($tokens);
+            }
+        } elseif (count($tokens) == 3) {
+            if ($this->isTokenWhitespace($tokens[0])
+                    && $this->isTokenStandaloneClear($tokens[1])
+                    && $tokens[2][Tokenizer::TOKEN_TYPE] == Tokenizer::TYPE_LINE) {
+                array_shift($tokens);
+                array_pop($tokens);
+            }
+        }
+        foreach ($tokens as $token) {
             switch ($token[Tokenizer::TOKEN_TYPE]) {
                 case Tokenizer::TYPE_OPEN:
                     $name = $token[Tokenizer::TOKEN_NAME];
@@ -198,8 +213,6 @@ class Mustache
                     $buffer .= $token[Tokenizer::TOKEN_VALUE];
                     break;
                 case Tokenizer::TYPE_LINE:
-                    ++$this->line;
-                    $this->lineToken == 0;
                     $buffer .= $token[Tokenizer::TOKEN_VALUE];
                     break;
                 case Tokenizer::TYPE_PARTIAL1:
