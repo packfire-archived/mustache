@@ -212,6 +212,30 @@ class Mustache
         return $buffer;
     }
 
+    private function isTokenStandaloneClear(array $token)
+    {
+        $types = array(
+            Tokenizer::TYPE_COMMENT,
+            Tokenizer::TYPE_CHANGETAG,
+            Tokenizer::TYPE_OPEN,
+            Tokenizer::TYPE_CLOSE,
+            Tokenizer::TYPE_COMMENT,
+            Tokenizer::TYPE_PARTIAL1,
+            Tokenizer::TYPE_PARTIAL2,
+            Tokenizer::TYPE_INVERT
+        );
+        return in_array($token[Tokenizer::TOKEN_TYPE], $types);
+    }
+
+    private function isTokenWhitespace(array $token)
+    {
+        if ($token[Tokenizer::TOKEN_TYPE] == Tokenizer::TYPE_TEXT) {
+            return preg_match('/^\s*$/', $token[Tokenizer::TOKEN_VALUE]);
+        }
+
+        return false;
+    }
+
     protected function scope($path)
     {
         $path = self::processDotNotation($path);
