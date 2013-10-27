@@ -281,4 +281,36 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $output = $mustache->loader($loader)->parameters(array('name' => 'world'))->render();
         $this->assertEquals('There you go! My name is world.', $output);
     }
+
+    public function testStandalone()
+    {
+        $mustache = new Mustache();
+        $mustache->template("Testing\n   {{! some comment}}\nTesting");
+        $output = $mustache->render();
+        $this->assertEquals("Testing\nTesting", $output);
+    }
+
+    public function testStandalone1()
+    {
+        $mustache = new Mustache();
+        $mustache->template("Testing\n{{! some comment}}\nTesting");
+        $output = $mustache->render();
+        $this->assertEquals("Testing\nTesting", $output);
+    }
+
+    public function testStandalone2()
+    {
+        $mustache = new Mustache();
+        $mustache->template("Testing\n{{#test}}\nTesting\n{{/test}}\nTesting");
+        $output = $mustache->render();
+        $this->assertEquals("Testing\nTesting", $output);
+    }
+
+    public function testStandalone3()
+    {
+        $mustache = new Mustache();
+        $mustache->template("Testing\n{{test}}\nTesting");
+        $output = $mustache->render();
+        $this->assertEquals("Testing\n\nTesting", $output);
+    }
 }
