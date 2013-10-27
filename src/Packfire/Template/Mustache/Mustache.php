@@ -69,7 +69,7 @@ class Mustache
      * @var string
      * @since 1.2.0
      */
-    protected $line = 0;
+    protected $line = 1;
 
     /**
      * The current number of tokens on the line
@@ -127,10 +127,41 @@ class Mustache
     private function parse(array $scope, array $tokens)
     {
         $buffer = '';
-        while (($token = current($tokens)) !== false) {
+        $line = array();
+        foreach ($tokens as $token) {
             if ($token[Tokenizer::TOKEN_LINE] === $this->line) {
                 ++$this->lineToken;
+                $line[] = $token;
+            } else {
+                $buffer .= $this->processLine($scope, $line);
+                $line = array($token);
+                $this->lineToken = 1;
+                $this->line = $token[Tokenizer::TOKEN_LINE];
             }
+        }
+        if ($line) {
+            $buffer .= $this->processLine($scope, $line);
+        }
+        return $buffer;
+    }
+
+    private function processLine(array $scope, array $tokens)
+    {
+        $buffer = '';
+        if (count($tokens) == 2) {
+            if (self::isTokenStandaloneClear($tokens[0])
+                    && $tokens[1][Tokenizer::TOKEN_TYPE] == Tokenizer::TYPE_LINE) {
+                array_pop($tokens);
+            }
+        } elseif (count($tokens) == 3) {
+            if (self::isTokenWhitespace($tokens[0])
+                    && self::isTokenStandaloneClear($tokens[1])
+                    && $tokens[2][Tokenizer::TOKEN_TYPE] == Tokenizer::TYPE_LINE) {
+                array_shift($tokens);
+                array_pop($tokens);
+            }
+        }
+        foreach ($tokens as $token) {
             switch ($token[Tokenizer::TOKEN_TYPE]) {
                 case Tokenizer::TYPE_OPEN:
                     $name = $token[Tokenizer::TOKEN_NAME];
@@ -157,8 +188,6 @@ class Mustache
                         $buffer .= $this->parse($scope, $token[Tokenizer::TOKEN_NODES]);
                     }
                     break;
-                case Tokenizer::TYPE_CLOSE:
-                    break;
                 case Tokenizer::TYPE_NORMAL:
                     $name = $token[Tokenizer::TOKEN_NAME];
                     $property = $this->scope(array_merge($scope, array($name)));
@@ -184,8 +213,6 @@ class Mustache
                     $buffer .= $token[Tokenizer::TOKEN_VALUE];
                     break;
                 case Tokenizer::TYPE_LINE:
-                    ++$this->line;
-                    $this->lineToken == 0;
                     $buffer .= $token[Tokenizer::TOKEN_VALUE];
                     break;
                 case Tokenizer::TYPE_PARTIAL1:
@@ -194,9 +221,32 @@ class Mustache
                     $buffer .= $this->partial($name, $scope);
                     break;
             }
-            next($tokens);
         }
         return $buffer;
+    }
+
+    public static function isTokenStandaloneClear(array $token)
+    {
+        $types = array(
+            Tokenizer::TYPE_COMMENT,
+            Tokenizer::TYPE_CHANGETAG,
+            Tokenizer::TYPE_OPEN,
+            Tokenizer::TYPE_CLOSE,
+            Tokenizer::TYPE_COMMENT,
+            Tokenizer::TYPE_PARTIAL1,
+            Tokenizer::TYPE_PARTIAL2,
+            Tokenizer::TYPE_INVERT
+        );
+        return in_array($token[Tokenizer::TOKEN_TYPE], $types);
+    }
+
+    public static function isTokenWhitespace(array $token)
+    {
+        if ($token[Tokenizer::TOKEN_TYPE] == Tokenizer::TYPE_TEXT) {
+            return preg_match('/^\s*$/', $token[Tokenizer::TOKEN_VALUE]);
+        }
+
+        return false;
     }
 
     protected function scope($path)
