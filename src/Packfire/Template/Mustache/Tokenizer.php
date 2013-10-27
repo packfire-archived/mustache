@@ -148,6 +148,16 @@ class Tokenizer
                 $token[self::TOKEN_NODES] = $nodes;
                 $result[] = $token;
             } elseif ($closingTag && $token[self::TOKEN_TYPE] == self::TYPE_CLOSE && $token[self::TOKEN_NAME] == $closingTag) {
+                if ($index >= 1
+                        && $tokens[$index - 1][self::TOKEN_TYPE] == self::TYPE_LINE
+                        && $tokens[$index + 1][self::TOKEN_TYPE] == self::TYPE_LINE) {
+                    ++$index;
+                } elseif ($index >= 2
+                        && $tokens[$index - 2][self::TOKEN_TYPE] == self::TYPE_LINE
+                        && Mustache::isTokenWhitespace($tokens[$index - 1])
+                        && $tokens[$index + 1][self::TOKEN_TYPE] == self::TYPE_LINE) {
+                    ++$index;
+                }
                 break;
             } else {
                 $result[] = $token;
