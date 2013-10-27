@@ -157,8 +157,6 @@ class Mustache
                         $buffer .= $this->parse($scope, $token[Tokenizer::TOKEN_NODES]);
                     }
                     break;
-                case Tokenizer::TYPE_CLOSE:
-                    break;
                 case Tokenizer::TYPE_NORMAL:
                     $name = $token[Tokenizer::TOKEN_NAME];
                     $property = $this->scope(array_merge($scope, array($name)));
