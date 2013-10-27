@@ -207,6 +207,24 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('<p>sam</p>johnhenry!', $output);
     }
 
+    public function testTraversable()
+    {
+        $mustache = new Mustache();
+        $mustache->template('{{#list}}|{{name}}{{/list}}!');
+        $list = new \ArrayIterator(
+            array(
+                array('name' => 'sam'),
+                array('name' => 'john'),
+                array('name' => 'henry')
+            )
+        );
+        $params = array(
+            'list' => $list
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('|sam|john|henry!', $output);
+    }
+
     public function testSwitchImmediate()
     {
         $mustache = new Mustache();
