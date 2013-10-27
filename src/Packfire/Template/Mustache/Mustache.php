@@ -69,7 +69,7 @@ class Mustache
      * @var string
      * @since 1.2.0
      */
-    protected $line = 0;
+    protected $line = 1;
 
     /**
      * The current number of tokens on the line
@@ -127,10 +127,26 @@ class Mustache
     private function parse(array $scope, array $tokens)
     {
         $buffer = '';
-        while (($token = current($tokens)) !== false) {
+        $line = array();
+        foreach ($tokens as $token) {
             if ($token[Tokenizer::TOKEN_LINE] === $this->line) {
+                $line[] = $token;
                 ++$this->lineToken;
+            } else {
+                $buffer .= $this->processLine($scope, $line);
+                $line = array();
             }
+        }
+        if ($line) {
+            $buffer .= $this->processLine($scope, $line);
+        }
+        return $buffer;
+    }
+
+    private function processLine(array $scope, array $lineTokens)
+    {
+        $buffer = '';
+        foreach ($lineTokens as $token) {
             switch ($token[Tokenizer::TOKEN_TYPE]) {
                 case Tokenizer::TYPE_OPEN:
                     $name = $token[Tokenizer::TOKEN_NAME];
@@ -192,7 +208,6 @@ class Mustache
                     $buffer .= $this->partial($name, $scope);
                     break;
             }
-            next($tokens);
         }
         return $buffer;
     }
