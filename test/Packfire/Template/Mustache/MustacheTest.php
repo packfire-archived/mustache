@@ -116,6 +116,23 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Singapore 649139', $output);
     }
 
+    /**
+     * @expectedException Packfire\Template\Mustache\MustacheException
+     */
+    public function testUnexpectedCloseTag()
+    {
+        $mustache = new Mustache();
+        $mustache->template('Hi {{#person}}{{name}}{{/person}}!{{/person}}');
+        $params = array(
+            'person' => array(
+                'name' => 'Will Smith'
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('Hi Will Smith!', $output);
+    }
+
+
     public function testNotSet()
     {
         $mustache = new Mustache();
