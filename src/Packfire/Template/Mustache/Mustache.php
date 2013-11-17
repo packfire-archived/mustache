@@ -181,6 +181,9 @@ class Mustache
                         }
                     }
                     break;
+                case Tokenizer::TYPE_CLOSE:
+                    throw new MustacheException('Unexpected close tag ' . $token[Tokenizer::TOKEN_OPEN_DELIMITER] . '/' . $token[Tokenizer::TOKEN_NAME] . $token[Tokenizer::TOKEN_CLOSE_DELIMITER] . ' found at line ' . $this->line . '.');
+                    break;
                 case Tokenizer::TYPE_INVERT:
                     $name = $token[Tokenizer::TOKEN_NAME];
                     $property = $this->scope(array_merge($scope, array($name)));
@@ -190,7 +193,11 @@ class Mustache
                     break;
                 case Tokenizer::TYPE_NORMAL:
                     $name = $token[Tokenizer::TOKEN_NAME];
-                    $property = $this->scope(array_merge($scope, array($name)));
+                    if ($name == '.') {
+                        $property = $this->scope($scope);
+                    } else {
+                        $property = $this->scope(array_merge($scope, array($name)));
+                    }
                     if ($property) {
                         if (is_array($property)) {
                             $property = implode('', $property);
