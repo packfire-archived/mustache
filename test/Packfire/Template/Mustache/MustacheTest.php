@@ -192,6 +192,21 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('samjohnhenry!', $output);
     }
 
+    public function testArrayListNested()
+    {
+        $mustache = new Mustache();
+        $mustache->template('{{#list}}<b>{{.}}</b>{{/list}}!');
+        $params = array(
+            'list' => array(
+                'sam',
+                'john',
+                'henry'
+            )
+        );
+        $output = $mustache->parameters($params)->render();
+        $this->assertEquals('<b>sam</b><b>john</b><b>henry</b>!', $output);
+    }
+
     public function testArrayListUnescape()
     {
         $mustache = new Mustache();
