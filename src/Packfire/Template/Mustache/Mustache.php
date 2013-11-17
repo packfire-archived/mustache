@@ -190,7 +190,11 @@ class Mustache
                     break;
                 case Tokenizer::TYPE_NORMAL:
                     $name = $token[Tokenizer::TOKEN_NAME];
-                    $property = $this->scope(array_merge($scope, array($name)));
+                    if ($name == '.') {
+                        $property = $this->scope($scope);
+                    } else {
+                        $property = $this->scope(array_merge($scope, array($name)));
+                    }
                     if ($property) {
                         if (is_array($property)) {
                             $property = implode('', $property);
