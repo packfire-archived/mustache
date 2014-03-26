@@ -225,7 +225,7 @@ class Mustache
                 case Tokenizer::TYPE_PARTIAL1:
                 case Tokenizer::TYPE_PARTIAL2:
                     $name = $token[Tokenizer::TOKEN_NAME];
-                    $buffer .= $this->partial($name, $scope);
+                    $buffer .= $this->partial($name, $this->scope($scope));
                     break;
             }
         }
@@ -260,7 +260,7 @@ class Mustache
     {
         $path = self::processDotNotation($path);
         $originalPath = $path;
-        $scope = null;
+        $scope =  $this->parameters;
         while (count($path) > 0) {
             $scope = $this->parameters;
             foreach ($path as $item) {
