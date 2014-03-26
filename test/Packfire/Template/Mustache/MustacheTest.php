@@ -314,6 +314,18 @@ class MustacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('There you go! My name is world.', $output);
     }
 
+    /**
+     * @expectedException Packfire\Template\Mustache\MustacheException
+     */
+    public function testPartial2()
+    {
+        $mustache = new Mustache();
+        $mustache->template('There you go! {{>Loader/test}}ignored{{/Loader/test}}');
+        $loader = new Loader\FileSystemLoader(__DIR__);
+        $output = $mustache->loader($loader)->parameters(array('name' => 'world'))->render();
+        $this->assertEquals('There you go! My name is world.', $output);
+    }
+
     public function testStandalone()
     {
         $mustache = new Mustache();
